@@ -1004,6 +1004,14 @@ async function renderHome(){
   const app = $("#app");
   app.innerHTML = `
     <div class="card">
+      <h2>📁 Save location</h2>
+      <div id="fsStatus"></div>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:15px">
+        <input type="checkbox" id="autoDl" style="width:auto;min-height:auto" ${settings.autoDownload?"checked":""}>
+        When no folder is connected, also save each photo to Downloads</label>
+      <p class="muted">Everything is also kept inside the app; photos can be downloaded as a ZIP from each record.</p>
+    </div>
+    <div class="card">
       <h2>ARDS records</h2>
       <p class="muted">Each ARDS record is one site visit: its project details apply to every observation and sample added to it.</p>
       <button class="btn primary block" id="newProj">＋ New ARDS record</button>
@@ -1012,14 +1020,6 @@ async function renderHome(){
         return `<div class="list-item" data-id="${p.id}"><div class="grow"><div class="title">${esc(p.locality||"Untitled locality")}</div>
           <div class="sub">${esc(p.date||"")} · ${os.length} observation${os.length===1?"":"s"} · ${ns} sample${ns===1?"":"s"}</div></div><span class="chev">›</span></div>`;
       }).join("") : `<p class="muted">No records yet.</p>`}</div>
-    </div>
-    <div class="card">
-      <h2>Photo storage</h2>
-      <div id="fsStatus"></div>
-      <label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:15px">
-        <input type="checkbox" id="autoDl" style="width:auto;min-height:auto" ${settings.autoDownload?"checked":""}>
-        Also save each photo to the device's Downloads when no folder is connected</label>
-      <p class="muted">Every photo is also kept inside the app and can be downloaded later as a ZIP with one folder per observation.</p>
     </div>
     <div class="card">
       <h2>Backup</h2>
@@ -1039,17 +1039,75 @@ async function renderHome(){
 async function renderFsStatus(){
   const el = $("#fsStatus"); if(!el) return;
   if(!FS.supported){
-    el.innerHTML = `<p class="muted">This browser can't write directly into a chosen folder (common on phones). Photos are saved inside the app and, if ticked below, to Downloads.</p>`;
+    const brave = !!navigator.brave;
+    el.innerHTML = brave
+      ? `<p><b>Brave blocks apps from saving into a chosen folder.</b></p>
+         <p class="muted">To use a save folder, open this app's link in <b>Chrome</b> instead (Chrome on Android supports it) and add it to your home screen from there. On a computer you can also turn it on in Brave at <i>brave://flags</i> → “File System Access API”.</p>
+         <p class="muted">Until then, photos go to Downloads (if ticked below) and data can be saved with Export Excel / Download backup.</p>`
+      : `<p><b>This browser can't save into a chosen folder.</b></p>
+         <p class="muted">Use Chrome (Android or computer) or Edge to pick a save folder. Until then, photos go to Downloads (if ticked below) and data can be saved with Export Excel / Download backup.</p>`;
     return;
   }
   const ok = FS.root && await FS.ready(false);
-  el.innerHTML = `<p>${FS.root ? `Folder: <b>${esc(FS.root.name)}</b> ${ok?"✓ connected":"(tap Reconnect to allow access)"}` : "No photo folder chosen yet."}</p>
-    <p class="muted">Photos go into <i>folder / Date_Locality / ObsNN_Date_Time /</i>.</p>
-    <div class="btns"><button class="btn" id="pickDir">${FS.root?"Change folder":"Choose photo folder"}</button>
-    ${FS.root && !ok ? `<button class="btn primary" id="reconn">Reconnect</button>`:""}</div>`;
-  $("#pickDir").onclick = async () => { try{ await FS.choose(); toast("Photo folder set"); renderFsStatus(); }catch(e){} };
-  const r = $("#reconn"); if(r) r.onclick = async () => { await FS.ready(true); renderFsStatus(); };
+  el.innerHTML = `
+    <p>${FS.root ? `Saving to: <b>${esc(FS.root.name)}</b> ${ok?'<span class="pill">✓ connected</span>':'<span class="pill">needs reconnecting</span>'}` : "<b>No save folder chosen yet.</b>"}</p>
+    <p class="muted">Once chosen, the app saves automatically as you work:<br>
+      • photos → <i>Date_Locality / ObsNN_Date_Time /</i><br>
+      • Excel sheet for each record → <i>Date_Locality / ARDS_Date_Locality.xlsx</i><br>
+      • full backup → <i>lizard-ards-backup.json</i></p>
+    ${FS.root && !ok ? `<div class="banner">The phone asks for permission again each time the app is reopened. Tap <b>Reconnect</b> before you start recording.</div>`:""}
+    <div class="btns">
+      ${FS.root && !ok ? `<button class="btn primary" id="reconn">Reconnect</button>`:""}
+      <button class="btn ${FS.root?"":"primary"}" id="pickDir">${FS.root?"Change folder":"Choose save folder"}</button>
+      ${FS.root && ok ? `<button class="btn" id="saveAll">Save everything now</button>`:""}
+    </div>`;
+  $("#pickDir").onclick = async () => { try{ await FS.choose(); toast("Save folder set — saving existing data…"); await saveAllToFolder(); renderFsStatus(); }catch(e){ if(e && e.name!=="AbortError") toast("Couldn't use that folder: "+e.message, 4000); } };
+  const r = $("#reconn"); if(r) r.onclick = async () => { if(await FS.ready(true)){ toast("Folder reconnected"); } renderFsStatus(); };
+  const sa = $("#saveAll"); if(sa) sa.onclick = async () => { await saveAllToFolder(); };
 }
+
+/* ===================== Auto-save to folder ===================== */
+const folderTimers = {};
+let folderErrShown = false;
+function scheduleFolderSave(projectId){
+  if(!FS.root) return;
+  clearTimeout(folderTimers[projectId]);
+  folderTimers[projectId] = setTimeout(() => saveProjectToFolder(projectId, false), 2500);
+}
+async function saveProjectToFolder(projectId, withPhotos){
+  if(!FS.root || !(await FS.ready(false))) return false;
+  try{
+    const p = await DB.get("projects", projectId); if(!p) return false;
+    const {wb, name} = await buildWorkbook(projectId);
+    const data = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+    await FS.write([projectFolder(p)], name, new Blob([data], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+    if(withPhotos){
+      const obs = await DB.by("observations","projectId",projectId);
+      for(const ph of await DB.by("photos","projectId",projectId)){
+        const o = obs.find(x=>x.id===ph.obsId); const sm = o && o.samples.find(x=>x.id===ph.sampleId); if(!o||!sm) continue;
+        await FS.write([projectFolder(p), obsFolder(o)], photoName(ph, sm), ph.blob);
+      }
+    }
+    await FS.write([], "lizard-ards-backup.json", await backupBlob());
+    folderErrShown = false;
+    return true;
+  }catch(e){
+    if(!folderErrShown){ toast("Couldn't save to folder: " + e.message + (/lock|use|busy/i.test(e.message)?" (is the Excel file open?)":""), 5000); folderErrShown = true; }
+    return false;
+  }
+}
+async function saveAllToFolder(){
+  if(!(await FS.ready(true))){ toast("Folder access not allowed"); return; }
+  const ps = await DB.all("projects"); let n = 0;
+  for(const p of ps) if(await saveProjectToFolder(p.id, true)) n++;
+  if(!ps.length) await FS.write([], "lizard-ards-backup.json", await backupBlob());
+  toast(`Saved ${n} record${n===1?"":"s"} to ${FS.root.name}`);
+}
+async function folderBanner(){
+  if(!FS.root || await FS.ready(false)) return "";
+  return `<div class="banner">Save folder <b>${esc(FS.root.name)}</b> isn't connected — data is only being kept inside the app. <button class="btn small primary" id="reconnTop">Reconnect</button></div>`;
+}
+function wireFolderBanner(){ const b = $("#reconnTop"); if(b) b.onclick = async () => { if(await FS.ready(true)){ toast("Folder reconnected"); route(); } }; }
 
 /* ===================== Project ===================== */
 async function renderProject(id){
@@ -1059,7 +1117,7 @@ async function renderProject(id){
   const observers = (await DB.all("observers")).sort((a,b)=>a.name.localeCompare(b.name));
   const obs = (await DB.by("observations","projectId",id)).sort((a,b)=>a.no-b.no);
   const app = $("#app");
-  app.innerHTML = `
+  app.innerHTML = (await folderBanner()) + `
     <div class="card">
       <h2><span class="num">1</span> Project details</h2>
       <p class="muted">Applied to every observation in this record.</p>
@@ -1103,7 +1161,8 @@ async function renderProject(id){
       <div class="btns"><button class="btn danger small" id="delProj">Delete this ARDS record</button></div>
     </div>`;
 
-  const save = async () => { await DB.put("projects", p); };
+  wireFolderBanner();
+  const save = async () => { await DB.put("projects", p); scheduleFolderSave(p.id); };
   $("#pLoc").oninput = e => { p.locality = e.target.value; $("#title").textContent = p.locality || "New ARDS record"; save(); };
   $("#pDate").onchange = e => { p.date = e.target.value; save(); };
 
@@ -1126,7 +1185,7 @@ async function renderProject(id){
   $("#uSave").onclick = async () => {
     const name = $("#uName").value.trim(); if(!name){ toast("Enter a full name"); return; }
     const o = { id: $("#uId").value || uid(), name, address: $("#uAddr").value.trim(), affiliation: $("#uAff").value.trim() };
-    await DB.put("observers", o); p.observerId = o.id; settings.lastObserverId = o.id; await saveSettings(); await save();
+    await DB.put("observers", o); p.observerId = o.id; scheduleFolderSave(p.id); settings.lastObserverId = o.id; await saveSettings(); await save();
     toast("Observer saved"); renderProject(id);
   };
   $("#uDel").onclick = async () => {
@@ -1181,9 +1240,9 @@ async function renderObservation(id){
   const photos = await DB.by("photos","obsId",id);
   const urls = [];
   const app = $("#app");
-  const save = async () => { await DB.put("observations", o); };
+  const save = async () => { await DB.put("observations", o); scheduleFolderSave(o.projectId); };
 
-  app.innerHTML = `
+  app.innerHTML = (await folderBanner()) + `
     <div class="card">
       <h2><span class="num">${o.no}</span> Observation</h2>
       <div class="row">
@@ -1249,6 +1308,7 @@ async function renderObservation(id){
   };
   $("#doneObs").onclick = () => location.hash = `#/p/${o.projectId}`;
 
+  wireFolderBanner();
   /* ---- Altitude from pin (Copernicus 90 m DEM via Open-Meteo; needs signal) ---- */
   function showAltSrc(){
     const el = $("#altSrc"); if(!el) return;
@@ -1436,7 +1496,7 @@ async function renderObservation(id){
       const file = input.files[0]; if(!file) return;
       const seq = photos.filter(x=>x.sampleId===s.id).reduce((m,x)=>Math.max(m,x.seq),0)+1;
       const ph = { id:uid(), projectId:o.projectId, obsId:o.id, sampleId:s.id, takenAt:Date.now(), seq, type:file.type||"image/jpeg", blob:file };
-      await DB.put("photos", ph); photos.push(ph);
+      await DB.put("photos", ph); photos.push(ph); scheduleFolderSave(o.projectId);
       const name = photoName(ph, s);
       if(folderOk){
         try{ await FS.write([projectFolder(p), obsFolder(o)], name, file); toast(`Saved to ${FS.root.name}/${projectFolder(p)}/${obsFolder(o)}`); }
@@ -1457,6 +1517,11 @@ async function renderObservation(id){
 
 /* ===================== Export: Excel (draft) ===================== */
 async function exportExcel(projectId){
+  const {wb, name} = await buildWorkbook(projectId);
+  XLSX.writeFile(wb, name);
+  scheduleFolderSave(projectId);
+}
+async function buildWorkbook(projectId){
   const p = await DB.get("projects", projectId);
   const ob = (await DB.get("observers", p.observerId)) || {};
   const obs = (await DB.by("observations","projectId",projectId)).sort((a,b)=>a.no-b.no);
@@ -1488,7 +1553,7 @@ async function exportExcel(projectId){
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "ARDS records");
   const codes = [["ARDS codes"],[],["Major habitat"],...MAJOR.filter(m=>m[0]!=="Other"),[],["Micro habitat"],...MICRO.filter(m=>m[0]!=="Other"),[],["Light"],...LIGHT,[],["Temperature"],...TEMP,[],["Wind"],...WIND];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(codes), "Codes");
-  XLSX.writeFile(wb, `ARDS_${projectFolder(p)}.xlsx`);
+  return {wb, name:`ARDS_${projectFolder(p)}.xlsx`};
 }
 
 /* ===================== Export: photos ZIP (stored, no compression) ===================== */
@@ -1529,6 +1594,11 @@ async function exportZip(projectId){
 }
 
 /* ===================== Backup ===================== */
+async function backupBlob(){
+  const data = { app:"lizard-ards", version:1, exported:new Date().toISOString(),
+    projects: await DB.all("projects"), observations: await DB.all("observations"), observers: await DB.all("observers") };
+  return new Blob([JSON.stringify(data,null,1)], {type:"application/json"});
+}
 async function backup(){
   const data = { app:"lizard-ards", version:1, exported:new Date().toISOString(),
     projects: await DB.all("projects"), observations: await DB.all("observations"), observers: await DB.all("observers") };
