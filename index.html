@@ -919,8 +919,8 @@ function parseVoice(raw){
   let t = " " + wordsToNumbers(normText(raw)) + " ";
   const r = {}, num = "(\\d+(?:\\.\\d+)?)";
   const take = (re, fn) => { const m = t.match(re); if(m){ fn(m); t = t.replace(m[0]," "); } };
-  // SVL — "svl 55", "s v l 55", "snout vent 55", "snout vent length 55"
-  take(new RegExp("\\b(?:s\\s*\\.?\\s*v\\s*\\.?\\s*l|snout\\s*vent(?:\\s*length)?)\\s*(?:is|of|equals)?\\s*"+num), m => r.svl = m[1]);
+  // SVL — "svl 55", "s v l 55", "snout vent 55", "snout vent length 55"; "sbl 55" is a common mishearing of SVL
+  take(new RegExp("\\b(?:s\\s*\\.?\\s*[vb]\\s*\\.?\\s*l|snout\\s*vent(?:\\s*length)?)\\s*(?:is|of|equals)?\\s*"+num), m => r.svl = m[1]);
   // VTL — "vtl 61", "v t l 61", "vent tail 61", "tail length 61"
   take(new RegExp("\\b(?:v\\s*\\.?\\s*t\\s*\\.?\\s*l|vent\\s*tail(?:\\s*length)?|tail\\s*length)\\s*(?:is|of|equals)?\\s*"+num), m => r.vtl = m[1]);
   // Total length — "total length 116", "total 116", "tl 116" (after SVL/VTL so "v t l" isn't caught)
