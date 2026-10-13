@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2f5d3a">
+<meta name="theme-color" content="#3d380a">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Lizard ARDS">
+<meta name="apple-mobile-web-app-title" content="Lizard Recorder">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Lizard ARDS Recorder</title>
+<title>Lizard Field Recorder</title>
 <style>/* required styles */
 
 .leaflet-pane,
@@ -673,18 +673,23 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	}
 </style>
 <style>
-:root{
-  --bg:#f4f2ec; --card:#ffffff; --ink:#1d241f; --muted:#5f6b62; --line:#d9d6cc;
-  --brand:#2f5d3a; --brand-ink:#ffffff; --accent:#c27a2c; --danger:#a23b2a; --soft:#e8efe6;
+:root{ /* Tou Roa: olive #3d380a, cream #fcfaf5 */
+  --bg:#f3f0e4; --card:#fcfaf5; --ink:#24210a; --muted:#6a6548; --line:#dbd5bf;
+  --brand:#3d380a; --brand-ink:#fcfaf5; --accent:#b08a2e; --danger:#9c3b22; --soft:#e9e5d2;
+  --head:#3d380a; --head-ink:#fcfaf5;
   --radius:12px;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#141815; --card:#1d221e; --ink:#e7ece6; --muted:#9aa79d; --line:#334037;
-    --brand:#5d9b6a; --brand-ink:#0e1410; --accent:#e0a35c; --danger:#e07563; --soft:#233027; }
+  :root{ --bg:#16140a; --card:#211f10; --ink:#efeadb; --muted:#a8a284; --line:#3b3821;
+    --brand:#cfc58a; --brand-ink:#1b1906; --accent:#d4ab55; --danger:#e07563; --soft:#2c2a15; }
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header.top{position:sticky;top:0;z-index:1000;background:var(--brand);color:var(--brand-ink);
+html,body{margin:0;background:var(--bg);color:var(--ink);font:350 16px/1.45 "Segoe UI Semilight","Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+h1,h2,h3,b,strong{font-weight:600}
+.hero{display:flex;align-items:center;gap:14px;margin:8px 0 4px}
+.hero img{width:84px;height:84px;border-radius:14px;display:block}
+.hero .name{font-size:22px;line-height:1.2;font-weight:600}
+header.top{position:sticky;top:0;z-index:1000;background:var(--head);color:var(--head-ink);
   padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
 header.top h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 header.top button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:6px 10px;font-size:15px}
@@ -726,13 +731,22 @@ button{font:inherit;cursor:pointer}
 .meas{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
 .calc{font-size:13px;color:var(--muted);margin-top:6px}
 .calc.warn{color:var(--danger)}
-.slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .slot .btn{width:100%;flex-direction:column;gap:0;padding:8px 4px;line-height:1.2}
 .slot .thumbs{display:block;margin-top:0}
 .slot .thumb{width:100%;margin-top:8px}
 .slot .thumb img{width:100%;height:auto;aspect-ratio:1}
 .slot .thumb .btn{min-height:30px;padding:2px 7px}
 .tally-total{font-size:17px;margin-bottom:8px}
+.btn.speak{min-height:58px;font-size:19px;padding:10px 22px}
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:2500;display:flex;align-items:center;gap:10px;min-height:68px;padding:8px 24px 8px 18px;border-radius:999px;border:0;background:var(--brand);color:var(--brand-ink);font-size:19px;font-weight:700;text-align:left;line-height:1.15;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+.fab .mic{font-size:28px}
+.fab small{display:block;font-size:12px;font-weight:600;opacity:.9}
+.fab.listening{background:var(--accent);color:#1b1206}
+body.has-fab .toast{bottom:calc(100px + env(safe-area-inset-bottom))}
+.pill.dead{background:var(--danger);color:#fff}
+.sheets .thumb{width:110px}
+.sheets .thumb img{width:110px;height:110px}
 .tally-row{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
 .tally-row .grow{flex:1;min-width:0}
 .tally-row .n{font-weight:700;font-variant-numeric:tabular-nums}
@@ -765,7 +779,7 @@ button{font:inherit;cursor:pointer}
 <body>
 <header class="top">
   <button id="backBtn" class="hidden" aria-label="Back">‹ Back</button>
-  <h1 id="title">Lizard ARDS Recorder</h1>
+  <h1 id="title">Lizard Field Recorder</h1>
 </header>
 <main id="app"></main>
 <div id="toast" class="toast"></div>
@@ -794,6 +808,7 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 // Species list: NZTCS 50 — Conservation status of reptiles in Aotearoa New Zealand, 2025 (Hitchmough et al. 2026). [scientific, common, family]
 const SPECIES = [["Caretta caretta", "loggerhead turtle", "Cheloniidae"], ["Chelonia mydas", "green turtle", "Cheloniidae"], ["Dactylocnemis pacificus", "Pacific gecko", "Diplodactylidae"], ["Dactylocnemis “Matapia Island”", "Matapia gecko", "Diplodactylidae"], ["Dactylocnemis “Mokohīnau”", "Mokohīnau gecko", "Diplodactylidae"], ["Dactylocnemis “North Cape”", "Te Paki gecko", "Diplodactylidae"], ["Dactylocnemis “Poor Knights”", "Poor Knights gecko", "Diplodactylidae"], ["Dactylocnemis “Three Kings”", "Three Kings gecko", "Diplodactylidae"], ["Dermochelys coriacea", "leatherback turtle", "Dermochelyidae"], ["Eretmochelys imbricata", "hawksbill turtle", "Cheloniidae"], ["Hoplodactylus duvaucelii", "northern Duvaucel’s gecko", "Diplodactylidae"], ["Hoplodactylus tohu", "Tohu gecko", "Diplodactylidae"], ["Hydrophis platurus", "yellow-bellied sea snake", "Elapidae"], ["Lampropholis delicata", "plague skink", "Scincidae"], ["Laticauda colubrina", "yellow-lipped sea krait", "Laticaudidae"], ["Laticauda laticaudata", "brown lipped sea krait", "Laticaudidae"], ["Laticauda saintgironsi", "Saint-Giron’s sea krait", "Laticaudidae"], ["Lepidochelys olivacea", "olive ridley turtle", "Cheloniidae"], ["Mokopirirakau cryptozoicus", "Takitimu gecko", "Diplodactylidae"], ["Mokopirirakau galaxias", "hura te ao gecko", "Diplodactylidae"], ["Mokopirirakau granulatus", "forest gecko", "Diplodactylidae"], ["Mokopirirakau kahutarae", "black-eyed gecko", "Diplodactylidae"], ["Mokopirirakau nebulosus", "cloudy gecko", "Diplodactylidae"], ["Mokopirirakau “Open Bay Islands”", "Open Bay Islands gecko", "Diplodactylidae"], ["Mokopirirakau “Roys Peak”", "orange-spotted gecko", "Diplodactylidae"], ["Mokopirirakau “cascades”", "cascade gecko", "Diplodactylidae"], ["Mokopirirakau “southern North Island”", "ngahere gecko", "Diplodactylidae"], ["Mokopirirakau “southern forest”", "Tautuku gecko", "Diplodactylidae"], ["Mokopirirakau “Ōkārito”", "broad-cheeked gecko", "Diplodactylidae"], ["Naultinus elegans", "elegant gecko", "Diplodactylidae"], ["Naultinus flavirictus", "Aupouri gecko", "Diplodactylidae"], ["Naultinus gemmeus", "jewelled gecko", "Diplodactylidae"], ["Naultinus grayii", "Northland green gecko", "Diplodactylidae"], ["Naultinus manukanus", "Marlborough green gecko", "Diplodactylidae"], ["Naultinus punctatus", "barking gecko", "Diplodactylidae"], ["Naultinus rudis", "rough gecko", "Diplodactylidae"], ["Naultinus stellatus", "starred gecko", "Diplodactylidae"], ["Naultinus tuberculatus", "West Coast green gecko", "Diplodactylidae"], ["Oligosoma acrinasum", "Fiordland skink", "Scincidae"], ["Oligosoma aeneum", "copper skink", "Scincidae"], ["Oligosoma aff. acrinasum “Many Islands”", "", "Scincidae"], ["Oligosoma aff. alani “Far North”", "", "Scincidae"], ["Oligosoma aff. chloronoton “Clinton? gracile”", "", "Scincidae"], ["Oligosoma aff. chloronoton “Stewart Island”", "Stewart Island green skink", "Scincidae"], ["Oligosoma aff. chloronoton “West Otago”", "Lakes skink", "Scincidae"], ["Oligosoma aff. chloronoton “eastern Otago”", "Otago green skink", "Scincidae"], ["Oligosoma aff. chloronoton “flat head”", "", "Scincidae"], ["Oligosoma aff. inconspicuum “Barn Bay”", "", "Scincidae"], ["Oligosoma aff. inconspicuum “Cascade”", "", "Scincidae"], ["Oligosoma aff. inconspicuum “Central - Southern”", "", "Scincidae"], ["Oligosoma aff. inconspicuum “mahogany”", "mahogany skink", "Scincidae"], ["Oligosoma aff. infrapunctatum “Giles Creek”", "", "Scincidae"], ["Oligosoma aff. infrapunctatum “Westport”", "Westport skink", "Scincidae"], ["Oligosoma aff. infrapunctatum “cobble”", "cobble skink", "Scincidae"], ["Oligosoma aff. infrapunctatum “Ōkārito”", "", "Scincidae"], ["Oligosoma aff. laxa “Marlborough”", "Marlborough scree skink", "Scincidae"], ["Oligosoma aff. laxa “Mt Spencer”", "", "Scincidae"], ["Oligosoma aff. laxa “alpine rock northern”", "Central Canterbury alpine rock skink", "Scincidae"], ["Oligosoma aff. laxa “alpine rock”", "alpine rock skink", "Scincidae"], ["Oligosoma aff. laxa “central Canterbury”", "Central Canterbury scree skink", "Scincidae"], ["Oligosoma aff. longipes “southern”", "southern long-toed skink", "Scincidae"], ["Oligosoma aff. newmani “Buller”", "", "Scincidae"], ["Oligosoma aff. newmani “Douglas Range”", "", "Scincidae"], ["Oligosoma aff. newmani “Garibaldi”", "", "Scincidae"], ["Oligosoma aff. newmani “Gouland Downs”", "", "Scincidae"], ["Oligosoma aff. newmani “Karamea”", "", "Scincidae"], ["Oligosoma aff. newmani “Lockett Range”", "", "Scincidae"], ["Oligosoma aff. newmani “Lonely Lake”", "", "Scincidae"], ["Oligosoma aff. newmani “Mt White, Brown Hill”", "", "Scincidae"], ["Oligosoma aff. newmani “Nelson Lakes alpine – Mt Arthur”", "", "Scincidae"], ["Oligosoma aff. newmani “St Arnaud”", "", "Scincidae"], ["Oligosoma aff. newmani “Westland”", "", "Scincidae"], ["Oligosoma aff. polychroma Clade 2", "Waiharakeke grass skink", "Scincidae"], ["Oligosoma aff. polychroma Clade 3", "south Marlborough grass skink", "Scincidae"], ["Oligosoma aff. polychroma Clade 4", "Canterbury grass skink", "Scincidae"], ["Oligosoma aff. prasinum “Ashburton Lakes”", "Ashburton Lakes spotted skink", "Scincidae"], ["Oligosoma aff. robinsoni “Kaimanawa”", "", "Scincidae"], ["Oligosoma aff. robinsoni “Wairarapa”", "", "Scincidae"], ["Oligosoma aff. smithi “Three Kings, Te Paki, Western Northland”", "tātahi skink", "Scincidae"], ["Oligosoma alani", "robust skink", "Scincidae"], ["Oligosoma albornense", "Alborn Skink", "Scincidae"], ["Oligosoma aureocola", "Mataura skink", "Scincidae"], ["Oligosoma auroraense", "Hawke’s Bay skink", "Scincidae"], ["Oligosoma awakopaka", "awakōpaka skink", "Scincidae"], ["Oligosoma burganae", "Burgan skink", "Scincidae"], ["Oligosoma carinacauda", "Okuru skink", "Scincidae"], ["Oligosoma chionochloescens", "southern grass skink", "Scincidae"], ["Oligosoma chloronoton", "green skink", "Scincidae"], ["Oligosoma elium", "south Marlborough spotted skink", "Scincidae"], ["Oligosoma eludens", "rockhopper skink", "Scincidae"], ["Oligosoma fallai", "Falla’s skink", "Scincidae"], ["Oligosoma grande", "grand skink", "Scincidae"], ["Oligosoma hardyi", "Hardy’s skink", "Scincidae"], ["Oligosoma homalonotum", "chevron skink", "Scincidae"], ["Oligosoma hoparatea", "white-bellied skink", "Scincidae"], ["Oligosoma inconspicuum", "cryptic skink", "Scincidae"], ["Oligosoma infrapunctatum", "speckled skink", "Scincidae"], ["Oligosoma judgei", "Barrier skink", "Scincidae"], ["Oligosoma kahurangi", "Kahurangi skink", "Scincidae"], ["Oligosoma kakerakau", "Whirinaki skink", "Scincidae"], ["Oligosoma kokowai", "northern spotted skink", "Scincidae"], ["Oligosoma laxa", "scree skink", "Scincidae"], ["Oligosoma levidensum", "slight skink", "Scincidae"], ["Oligosoma lineoocellatum", "Canterbury spotted skink", "Scincidae"], ["Oligosoma longipes", "long-toed skink", "Scincidae"], ["Oligosoma maccanni", "McCann’s skink", "Scincidae"], ["Oligosoma macgregori", "McGregor’s skink", "Scincidae"], ["Oligosoma microlepis", "small-scaled skink", "Scincidae"], ["Oligosoma moco", "moko skink", "Scincidae"], ["Oligosoma murihiku", "herbfield skink", "Scincidae"], ["Oligosoma newmani sensu stricto", "Newman’s speckled skink", "Scincidae"], ["Oligosoma nigriplantare", "Chathams skink", "Scincidae"], ["Oligosoma northlandi", "Northland skink", "Scincidae"], ["Oligosoma notosaurus", "southern skink", "Scincidae"], ["Oligosoma oliveri", "marbled skink", "Scincidae"], ["Oligosoma ornatum", "ornate skink", "Scincidae"], ["Oligosoma ornatum longirostrum", "", "Scincidae"], ["Oligosoma otagense", "Otago skink", "Scincidae"], ["Oligosoma pachysomaticum", "southern marbled skink", "Scincidae"], ["Oligosoma pikitanga", "Sinbad skink", "Scincidae"], ["Oligosoma pluvialis", "Big Bay skink", "Scincidae"], ["Oligosoma polychroma", "northern grass skink", "Scincidae"], ["Oligosoma prasinum", "Mackenzie skink", "Scincidae"], ["Oligosoma repens", "Eyres skink", "Scincidae"], ["Oligosoma robinsoni", "crenulate skink", "Scincidae"], ["Oligosoma robinsoni subsp. “Southern North Island”", "Kupe skink", "Scincidae"], ["Oligosoma roimata", "Aorangi skink", "Scincidae"], ["Oligosoma salmo", "Kapitia skink", "Scincidae"], ["Oligosoma smithi", "shore skink", "Scincidae"], ["Oligosoma stenotis", "small-eared skink", "Scincidae"], ["Oligosoma striatum", "striped skink", "Scincidae"], ["Oligosoma suteri", "egg-laying skink", "Scincidae"], ["Oligosoma taumakae", "Taumaka skink", "Scincidae"], ["Oligosoma tekakahu", "Te Kakahu skink", "Scincidae"], ["Oligosoma toka", "Nevis skink", "Scincidae"], ["Oligosoma townsi", "Hauraki skink", "Scincidae"], ["Oligosoma whitakeri", "Whitaker’s skink", "Scincidae"], ["Oligosoma zelandicum", "glossy brown skink", "Scincidae"], ["Sphenodon punctatus", "tuatara", "Sphenodontidae"], ["Toropuku inexpectatus", "northern striped gecko", "Diplodactylidae"], ["Toropuku stephensi", "southern striped gecko", "Diplodactylidae"], ["Tukutuku rakiurae", "harlequin gecko", "Diplodactylidae"], ["Woodworthia cf. brunnea", "Waitaha gecko", "Diplodactylidae"], ["Woodworthia chrysosiretica", "goldstripe gecko", "Diplodactylidae"], ["Woodworthia korowai", "Muriwai gecko", "Diplodactylidae"], ["Woodworthia maculata", "Raukawa gecko", "Diplodactylidae"], ["Woodworthia “Central Otago”", "schist gecko", "Diplodactylidae"], ["Woodworthia “Cromwell”", "Kawarau gecko", "Diplodactylidae"], ["Woodworthia “Kaikōura”", "Kaikōura gecko", "Diplodactylidae"], ["Woodworthia “Marlborough mini”", "minimac gecko", "Diplodactylidae"], ["Woodworthia “Mt Arthur”", "Kahurangi gecko", "Diplodactylidae"], ["Woodworthia “Otago/Southland large”", "kōrero gecko", "Diplodactylidae"], ["Woodworthia “Raggedy”", "Raggedy Range gecko", "Diplodactylidae"], ["Woodworthia “Sabine”", "Tikumu gecko", "Diplodactylidae"], ["Woodworthia “Southern Alps northern”", "greywacke gecko", "Diplodactylidae"], ["Woodworthia “Southern Alps”", "Southern Alps gecko", "Diplodactylidae"], ["Woodworthia “pygmy”", "pygmy gecko", "Diplodactylidae"], ["Woodworthia “south-western”", "south-western large gecko", "Diplodactylidae"], ["Woodworthia “southern mini”", "short-toed gecko", "Diplodactylidae"]];
 const UNKNOWN = "Unknown species";
+const LOGO = "data:image/png;base64,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";
 const FAMILY_GROUPS = [
   ["Geckos (Diplodactylidae)", ["Diplodactylidae"]],
   ["Skinks (Scincidae)", ["Scincidae"]],
@@ -809,7 +824,7 @@ const WIND = [["1","Calm"],["2","Light breeze"],["3","Mod breeze"],["4","Gusty"]
 const CAPTURE = ["GMT","ACO","Pitfall","Spotlighting","MHS","Supervised Clearance"];
 const SEX = ["Male","Female"];
 const AGE = ["Adult","Sub-adult","Neonate"];
-const VIEWS = [["DOR","Dorsal"],["LAT","Lateral"],["VEN","Ventral"]];
+const VIEWS = [["DOR","Dorsal"],["LAT","Lateral"],["VEN","Ventral"],["EAR","Ear hole"]];
 const GRAVID = ["Yes","No","NA"];
 
 /* ===================== Utilities ===================== */
@@ -918,6 +933,8 @@ function parseVoice(raw){
   take(/\bgravid\s+(?:n\s*\/?\s*a|not\s+applicable)\b/, () => r.gravid = "NA");
   take(/\bgravid(?:\s+yes)?\b/, () => r.gravid = "Yes");
   // Sex / age
+  take(/\b(?:deceased|dead)\b/, () => r.deceased = true);
+  take(/\b(?:genetic|tissue|dna)(?:\s+sample)?(?:\s+(?:taken|yes))?\b/, () => r.genetic = true);
   take(/\bfemale\b/, () => r.sex = "Female");
   take(/\bmale\b/, () => r.sex = "Male");
   take(/\bsub\s*adult\b/, () => r.age = "Sub-adult");
@@ -928,8 +945,8 @@ function parseVoice(raw){
   if(sp) r.species = sp.sci;
   return r;
 }
-const VOICE_LABELS = {species:"Species", total:"Total length", svl:"SVL", vtl:"VTL", tailState:"Tail", regen:"Regen", age:"Age class", sex:"Sex", gravid:"Gravid"};
-function describeParse(r){ return Object.keys(VOICE_LABELS).filter(k => r[k]!==undefined).map(k => `${VOICE_LABELS[k]}: ${r[k]}${["total","svl","vtl","regen"].includes(k)?" mm":""}`).join(" · "); }
+const VOICE_LABELS = {species:"Species", total:"Total length", svl:"SVL", vtl:"VTL", tailState:"Tail", regen:"Regen", age:"Age class", sex:"Sex", gravid:"Gravid", deceased:"Deceased", genetic:"Genetic sample"};
+function describeParse(r){ return Object.keys(VOICE_LABELS).filter(k => r[k]!==undefined).map(k => `${VOICE_LABELS[k]}: ${r[k]===true?"Yes":r[k]}${["total","svl","vtl","regen"].includes(k)?" mm":""}`).join(" · "); }
 
 /* ===================== IndexedDB ===================== */
 const DB = {
@@ -1012,6 +1029,8 @@ async function newAnimalId(){
 function photoName(photo, animal){
   return `${stamp(photo.takenAt)}_${speciesCode(animal.species)}_${animal.id}${photo.view?"_"+photo.view:""}${photo.seq>1?"_"+photo.seq:""}${extFor(photo.type)}`;
 }
+// Survey data sheet photo: YYYYMMDD_SurveyNN_DataSheet_n.jpg (saved next to the Excel file)
+function sheetName(ph, sv){ return `${(sv.date||"").replace(/-/g,"")}_Survey${pad(sv.no)}_DataSheet_${ph.seq}${extFor(ph.type)}`; }
 /* ---- Measurements: VTL = total length − SVL (unless VTL was typed in) ---- */
 function numOrNull(v){ const t = String(v ?? "").trim().replace(",","."); if(t === "") return null; const n = Number(t); return isFinite(n) ? n : null; }
 function calcVtl(a){ // returns true if a.vtl changed
@@ -1038,21 +1057,25 @@ function projectTally(obsList){
   all.sort((x,y) => x.t - y.t || x.no - y.no || x.i - y.i);
   const bySpecies = new Map(), numbers = new Map();
   all.forEach((x,k) => { const sp = x.a.species || UNKNOWN, n = (bySpecies.get(sp)||0) + 1; bySpecies.set(sp, n); numbers.set(x.a.id, {n:k+1, sp:n}); });
-  return {total: all.length, bySpecies, numbers};
+  return {total: all.length, dead: all.filter(x => x.a.deceased).length, bySpecies, numbers};
 }
 function speciesLabel(sci){ return commonName(sci) || sci || UNKNOWN; }
 function tallyHTML(t){
   if(!t.total) return `<p class="muted">No animals recorded yet.</p>`;
   const rows = [...t.bySpecies].sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  return `<div class="tally-total">Total animals: <b>${t.total}</b></div>` + rows.map(([sp,n]) =>
+  return `<div class="tally-total">Total animals: <b>${t.total}</b>${t.dead ? ` <span class="muted">(${t.dead} deceased)</span>` : ""}</div>` + rows.map(([sp,n]) =>
     `<div class="tally-row"><span class="grow">${esc(speciesLabel(sp))}${commonName(sp)?` <span class="muted"><i>${esc(sp)}</i></span>`:""}</span><span class="n">${n}</span></div>`).join("");
 }
 
 /* ===================== Router ===================== */
-let leafletMap = null, gpsWatch = null;
+let leafletMap = null, gpsWatch = null, activeRec = null;
+const leaveFns = [];   // run when leaving a page
+function onLeave(fn){ leaveFns.push(fn); }
 function stopGps(){ if(gpsWatch!==null){ navigator.geolocation.clearWatch(gpsWatch); gpsWatch=null; } }
 async function route(){
   stopGps();
+  leaveFns.splice(0).forEach(f => { try{ f(); }catch(e){} });
+  if(activeRec){ try{ activeRec.abort(); }catch(e){} activeRec = null; }
   if(leafletMap){ leafletMap.remove(); leafletMap=null; }
   const h = location.hash.slice(1).split("/").filter(Boolean);
   const back = $("#backBtn");
@@ -1065,32 +1088,33 @@ window.addEventListener("hashchange", route);
 
 /* ===================== Home ===================== */
 async function renderHome(){
-  $("#title").textContent = "Lizard ARDS Recorder";
+  $("#title").textContent = "Lizard Field Recorder";
   const projects = (await DB.all("projects")).sort((a,b)=>b.createdAt-a.createdAt);
   const obs = await DB.all("observations");
   const app = $("#app");
   app.innerHTML = `
+    <div class="hero"><img src="${LOGO}" alt="Tou Roa logo"><div class="name">Lizard Field Recorder</div></div>
     <div class="card">
       <h2>📁 Save location</h2>
       <div id="fsStatus"></div>
       <label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:15px">
         <input type="checkbox" id="autoDl" style="width:auto;min-height:auto" ${settings.autoDownload?"checked":""}>
         When no folder is connected, also save each photo to Downloads</label>
-      <p class="muted">Everything is also kept inside the app; photos can be downloaded as a ZIP from each record.</p>
+      <p class="muted">Everything is also kept inside the app; photos can be downloaded as a ZIP from each project.</p>
     </div>
     <div class="card">
-      <h2>ARDS records</h2>
-      <p class="muted">Each ARDS record is one project at one locality. Add a survey for each day of field work; observations and animals go inside the survey.</p>
-      <button class="btn primary block" id="newProj">＋ New ARDS record</button>
+      <h2>Projects</h2>
+      <p class="muted">Each project is one locality. Add a survey for each day of field work; observations and animals go inside the survey.</p>
+      <button class="btn primary block" id="newProj">＋ New project</button>
       <div id="projList">${projects.length ? projects.map(p => {
         const os = obs.filter(o=>o.projectId===p.id); const ns = os.reduce((n,o)=>n+(o.animals||[]).length,0);
         return `<div class="list-item" data-id="${p.id}"><div class="grow"><div class="title">${esc(p.locality||"Untitled locality")}</div>
           <div class="sub">${esc(p.date||"")} · ${(p.surveys||[]).length} survey${(p.surveys||[]).length===1?"":"s"} · ${os.length} observation${os.length===1?"":"s"} · ${ns} animal${ns===1?"":"s"}</div></div><span class="chev">›</span></div>`;
-      }).join("") : `<p class="muted">No records yet.</p>`}</div>
+      }).join("") : `<p class="muted">No projects yet.</p>`}</div>
     </div>
     <div class="card">
       <h2>Backup</h2>
-      <p class="muted">Save or restore all records and observers (photos not included — use the ZIP download for those).</p>
+      <p class="muted">Save or restore all projects and observers (photos not included — use the ZIP download for those).</p>
       <div class="btns"><button class="btn" id="bk">Download backup</button><button class="btn" id="rs">Restore backup</button></div>
     </div>`;
   $("#newProj").onclick = async () => {
@@ -1122,7 +1146,7 @@ async function renderFsStatus(){
     <p>${FS.root ? `Saving to: <b>${esc(FS.root.name)}</b> ${ok?'<span class="pill">✓ connected</span>':'<span class="pill">needs reconnecting</span>'}` : "<b>No save folder chosen yet.</b>"}</p>
     <p class="muted">Once chosen, the app saves automatically as you work:<br>
       • photos → <i>Date_Locality / ObsNN_Date_Time /</i><br>
-      • Excel sheet for each record → <i>Date_Locality / ARDS_Date_Locality.xlsx</i><br>
+      • Excel files for each project → <i>Date_Locality / ARDS_records_….xlsx</i> and <i>Project_data_….xlsx</i><br>
       • full backup → <i>lizard-ards-backup.json</i></p>
     ${FS.root && !ok ? `<div class="banner">The phone asks for permission again each time the app is reopened. Tap <b>Reconnect</b> before you start recording.</div>`:""}
     <div class="btns">
@@ -1147,12 +1171,14 @@ async function saveProjectToFolder(projectId, withPhotos){
   if(!FS.root || !(await FS.ready(false))) return false;
   try{
     const p = await DB.get("projects", projectId); if(!p) return false;
-    const {wb, name} = await buildWorkbook(projectId);
-    const data = XLSX.write(wb, {bookType:"xlsx", type:"array"});
-    await FS.write([projectFolder(p)], name, new Blob([data], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+    for(const kind of EXCEL_KINDS){
+      const {wb, name} = await buildWorkbook(projectId, kind);
+      await FS.write([projectFolder(p)], name, new Blob([XLSX.write(wb, {bookType:"xlsx", type:"array"})], {type:XLSX_TYPE}));
+    }
     if(withPhotos){
       const obs = await DB.by("observations","projectId",projectId);
       for(const ph of await DB.by("photos","projectId",projectId)){
+        if(ph.kind === "datasheet"){ const sv = (p.surveys||[]).find(x => x.id === ph.surveyId); if(sv) await FS.write([projectFolder(p)], sheetName(ph, sv), ph.blob); continue; }
         const o = obs.find(x=>x.id===ph.obsId); const an = o && (o.animals||[]).find(x=>x.id===ph.animalId); if(!o||!an) continue;
         await FS.write([projectFolder(p), obsFolder(o)], photoName(ph, an), ph.blob);
       }
@@ -1170,7 +1196,7 @@ async function saveAllToFolder(){
   const ps = await DB.all("projects"); let n = 0;
   for(const p of ps) if(await saveProjectToFolder(p.id, true)) n++;
   if(!ps.length) await FS.write([], "lizard-ards-backup.json", await backupBlob());
-  toast(`Saved ${n} record${n===1?"":"s"} to ${FS.root.name}`);
+  toast(`Saved ${n} project${n===1?"":"s"} to ${FS.root.name}`);
 }
 async function folderBanner(){
   if(!FS.root || await FS.ready(false)) return "";
@@ -1215,7 +1241,7 @@ async function renderProject(id){
   const p = await DB.get("projects", id);
   if(!p){ location.hash="#/"; return; }
   if(!Array.isArray(p.surveys) || !p.surveys.length){ newSurvey(p, p.date || todayISO(), []); await DB.put("projects", p); }
-  $("#title").textContent = p.locality || "New ARDS record";
+  $("#title").textContent = p.locality || "New project";
   const observers = (await DB.all("observers")).sort((a,b)=>a.name.localeCompare(b.name));
   const allObs = (await DB.by("observations","projectId",id)).sort((a,b)=>a.no-b.no);
   const surveys = [...p.surveys].sort((a,b)=>a.no-b.no);
@@ -1223,15 +1249,20 @@ async function renderProject(id){
   const obs = allObs.filter(o => o.surveyId === sv.id);
   const chosen = sv.observerIds.map(i => observers.find(o => o.id === i)).filter(Boolean);
   const nObs = s => allObs.filter(o => o.surveyId === s.id).length;
+  const projPhotos = await DB.by("photos","projectId",id);
+  const sheets = projPhotos.filter(x => x.kind === "datasheet" && x.surveyId === sv.id).sort((a,b)=>a.seq-b.seq);
+  const sheetUrls = sheets.map(x => URL.createObjectURL(x.blob)); onLeave(() => sheetUrls.forEach(u => URL.revokeObjectURL(u)));
   const app = $("#app");
   app.innerHTML = (await folderBanner()) + `
     <div class="card">
       <h2><span class="num">1</span> Project details</h2>
-      <p class="muted">Applied to every survey and observation in this record.</p>
+      <p class="muted">Applied to every survey and observation in this project.</p>
       <label for="pLoc">Locality name</label>
       <input id="pLoc" value="${esc(p.locality)}" placeholder="e.g. Kaitorete Spit, Canterbury">
       <label for="pDate">Start date</label>
       <input id="pDate" type="date" value="${esc(p.date)}">
+      <label for="pWaa">Wildlife Act Authority (WAA) number</label>
+      <input id="pWaa" value="${esc(p.waa)}" placeholder="e.g. 12345-FAU" autocapitalize="characters">
     </div>
 
     <div class="card">
@@ -1252,6 +1283,10 @@ async function renderProject(id){
       </select>
       <div class="btns"><button class="btn small" id="addUser">＋ Add user</button>
         ${surveys.length>1 ? `<button class="btn small danger" id="delSurvey" style="margin-left:auto">Delete this survey</button>` : ""}</div>
+      <label>Data sheet photos</label>
+      <p class="muted" style="margin:0">Photograph the paper data sheet for this survey. Saved next to the Excel file.</p>
+      <div class="thumbs sheets">${sheets.map((x,i) => `<div class="thumb"><img src="${sheetUrls[i]}" alt="Data sheet ${x.seq}"><div class="fn">${esc(sheetName(x, sv))}</div><button class="btn small" data-sh="dl" data-ph="${x.id}">Save</button> <button class="btn small danger" data-sh="rm" data-ph="${x.id}">✕</button></div>`).join("")}</div>
+      <div class="btns"><button class="btn accent" id="addSheet">📷 Data sheet photo</button></div>
       <div id="userPanel" class="subpanel hidden">
         <input type="hidden" id="uId">
         <label for="uName">Full name</label><input id="uName" autocomplete="name">
@@ -1282,18 +1317,20 @@ async function renderProject(id){
     <div class="card">
       <h2>Export</h2>
       <div class="btns">
-        <button class="btn accent" id="xlsx">Export Excel sheet</button>
+        <button class="btn accent" id="xlsxArds">Export ARDS records</button>
+        <button class="btn accent" id="xlsxData">Export Project data</button>
         <button class="btn" id="zip">Download photos (ZIP)</button>
       </div>
-      <p class="muted">Excel layout is a draft — one row per animal, all surveys in one sheet.</p>
-      <div class="btns"><button class="btn danger small" id="delProj">Delete this ARDS record</button></div>
+      <p class="muted"><b>ARDS records</b>: one row per captured animal, in ARDS card order. <b>Project data</b>: all survey and measurement data, one row per animal.</p>
+      <div class="btns"><button class="btn danger small" id="delProj">Delete this project</button></div>
     </div>`;
 
   wireFolderBanner();
   const save = async () => { await DB.put("projects", p); scheduleFolderSave(p.id); };
   const rememberObservers = () => { settings.lastObserverIds = [...sv.observerIds]; return saveSettings(); };
-  $("#pLoc").oninput = e => { p.locality = e.target.value; $("#title").textContent = p.locality || "New ARDS record"; save(); };
+  $("#pLoc").oninput = e => { p.locality = e.target.value; $("#title").textContent = p.locality || "New project"; save(); };
   $("#pDate").onchange = e => { p.date = e.target.value; save(); };
+  $("#pWaa").oninput = e => { p.waa = e.target.value.trim(); save(); };
 
   // Survey
   $("#sSel").onchange = async e => { p.curSurvey = e.target.value; await save(); renderProject(id); };
@@ -1335,9 +1372,34 @@ async function renderProject(id){
     for(const s of p.surveys) s.observerIds = s.observerIds.filter(x => x !== oid);
     await save(); renderProject(id);
   };
+  $("#addSheet").onclick = async () => {
+    let folderOk = false;
+    if(FS.root){ try{ folderOk = await FS.ready(true); }catch(e){} }
+    const input = $("#photoInput"); input.value = "";
+    input.onchange = async () => {
+      const file = input.files[0]; if(!file) return;
+      const seq = sheets.reduce((m,x)=>Math.max(m,x.seq),0)+1;
+      const ph = { id:uid(), projectId:id, surveyId:sv.id, kind:"datasheet", takenAt:Date.now(), seq, type:file.type||"image/jpeg", blob:file };
+      await DB.put("photos", ph); scheduleFolderSave(id);
+      const name = sheetName(ph, sv);
+      if(folderOk){
+        try{ await FS.write([projectFolder(p)], name, file); toast(`Saved to ${FS.root.name}/${projectFolder(p)}`); }
+        catch(e){ toast("Couldn't write to folder — photo kept in app"); }
+      } else if(settings.autoDownload){ downloadBlob(file, name); toast("Data sheet saved: " + name); }
+      else toast("Data sheet stored in app: " + name);
+      renderProject(id);
+    };
+    input.click();
+  };
+  $$("[data-sh]").forEach(b => b.onclick = async () => {
+    const ph = sheets.find(x => x.id === b.dataset.ph); if(!ph) return;
+    if(b.dataset.sh === "dl") downloadBlob(ph.blob, sheetName(ph, sv));
+    else { if(!confirm("Remove this data sheet photo from the app?")) return; await DB.del("photos", ph.id); renderProject(id); }
+  });
   const ds = $("#delSurvey"); if(ds) ds.onclick = async () => {
     if(!confirm(obs.length ? `Delete Survey ${sv.no} with its ${obs.length} observation${obs.length===1?"":"s"}, their animals and stored photos? This cannot be undone.` : `Delete Survey ${sv.no}?`)) return;
     for(const o of obs){ for(const ph of await DB.by("photos","obsId",o.id)) await DB.del("photos", ph.id); await DB.del("observations", o.id); }
+    for(const ph of sheets) await DB.del("photos", ph.id);
     p.surveys = p.surveys.filter(s => s.id !== sv.id); delete p.curSurvey;
     await save(); renderProject(id);
   };
@@ -1350,10 +1412,11 @@ async function renderProject(id){
     await DB.put("observations", o); location.hash = `#/o/${o.id}`;
   };
   $$("#obsList .list-item").forEach(el => el.onclick = () => location.hash = `#/o/${el.dataset.id}`);
-  $("#xlsx").onclick = () => exportExcel(id);
+  $("#xlsxArds").onclick = () => exportExcel(id, "ards");
+  $("#xlsxData").onclick = () => exportExcel(id, "data");
   $("#zip").onclick = () => exportZip(id);
   $("#delProj").onclick = async () => {
-    if(!confirm("Delete this ARDS record, all its surveys, observations, animals and stored photos? This cannot be undone.")) return;
+    if(!confirm("Delete this project, all its surveys, observations, animals and stored photos? This cannot be undone.")) return;
     for(const o of allObs) await DB.del("observations", o.id);
     for(const ph of await DB.by("photos","projectId",id)) await DB.del("photos", ph.id);
     await DB.del("projects", id); location.hash = "#/";
@@ -1539,11 +1602,10 @@ async function renderObservation(id){
 
   /* ---- Animals ---- */
   const voiceMsg = {};
-  let activeRec = null;
   const applyVoice = (s, alternatives) => {
     let best = null, bestN = -1, bestText = "";
     for(const a of alternatives){ const r = parseVoice(a); const n = Object.keys(r).length + (r.species?1:0); if(n > bestN){ best = r; bestN = n; bestText = a; } }
-    if(!best || !Object.keys(best).length){ voiceMsg[s.id] = {ok:false, text:`Heard “${alternatives[0]||""}” — nothing recognised. Try e.g. “total length 116 SVL 55 adult female”.`}; renderAnimals(); return; }
+    if(!best || !Object.keys(best).length){ voiceMsg[s.id] = {ok:false, text:`Heard “${alternatives[0]||""}” — nothing recognised. Try e.g. “total length 116 SVL 55 adult female”.`}; renderAnimals(); toast(voiceMsg[s.id].text, 4500); return; }
     const before = {...s};
     Object.assign(s, best);
     if(best.tailState === "Entire") s.regen = "";
@@ -1553,13 +1615,52 @@ async function renderObservation(id){
     if(s.sex !== "Female") s.gravid = "";
     voiceMsg[s.id] = {ok:true, text:`Heard “${bestText}” → ${describeParse(best)}${best.species?"":" (species not recognised — pick from list)"}`, undo: before};
     save(); renderAnimals();
+    toast(voiceMsg[s.id].text, 4500);
   };
+  // Voice: works from the big Speak button on each animal or the floating one at the bottom of the screen
+  const startVoice = (s, btn, idleHTML) => {
+    const card = () => $$(".animal")[o.animals.indexOf(s)];
+    if(!SpeechRec){ toast("Voice recognition isn't available in this browser — use the keyboard mic in the typing box", 4000); const c = card(); if(c){ c.scrollIntoView({block:"start"}); $('[data-f="voicetext"]', c).focus(); } return; }
+    if(activeRec){ activeRec.stop(); return; }
+    const rec = new SpeechRec(); activeRec = rec;
+    rec.lang = "en-NZ"; rec.interimResults = true; rec.maxAlternatives = 5; rec.continuous = false;
+    const setBtn = on => { btn.classList.toggle("listening", on); btn.innerHTML = on ? `<span class="mic">●</span><span>Listening…<small>tap to stop</small></span>` : idleHTML(); };
+    setBtn(true);
+    rec.onresult = ev => {
+      const res = ev.results[ev.results.length-1];
+      const c = card(); if(c) $('[data-f="voicetext"]', c).value = res[0].transcript;
+      if(res.isFinal) applyVoice(s, [...res].map(a => a.transcript));
+    };
+    rec.onerror = ev => { toast(ev.error==="network" ? "Voice needs signal on this phone — use the keyboard mic instead" : ev.error==="not-allowed" ? "Microphone permission was blocked" : "Voice error: "+ev.error, 4000); };
+    rec.onend = () => { if(activeRec === rec) activeRec = null; setBtn(false); updateFab(); };
+    try{ rec.start(); }catch(err){ activeRec = null; setBtn(false); toast("Couldn't start voice: "+err.message); }
+  };
+  const fab = document.createElement("button");
+  fab.id = "fabSpeak"; fab.className = "fab hidden"; fab.type = "button";
+  document.body.appendChild(fab); document.body.classList.add("has-fab");
+  const fabTarget = () => {   // the animal card taking up most of the screen
+    const cards = $$(".animal"); if(!cards.length) return null;
+    let best = cards.length-1, bv = 0;
+    cards.forEach((c,i) => { const r = c.getBoundingClientRect(); const v = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0); if(v > bv){ bv = v; best = i; } });
+    return best;
+  };
+  const fabHTML = () => { const i = fabTarget(); if(i == null) return ""; const num = projectTally([...otherObs, o]).numbers.get(o.animals[i].id);
+    return `<span class="mic">🎤</span><span>Speak<small>Animal ${num ? num.n : i+1}</small></span>`; };
+  function updateFab(){
+    if(!document.body.contains(fab) || fab.classList.contains("listening")) return;
+    const i = fabTarget(); fab.classList.toggle("hidden", i == null); if(i != null) fab.innerHTML = fabHTML();
+  }
+  fab.onclick = () => { if(activeRec){ activeRec.stop(); return; } const i = fabTarget(); if(i != null) startVoice(o.animals[i], fab, fabHTML); };
+  let fabRaf = 0;
+  const onScroll = () => { cancelAnimationFrame(fabRaf); fabRaf = requestAnimationFrame(updateFab); };
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onLeave(() => { window.removeEventListener("scroll", onScroll); fab.remove(); document.body.classList.remove("has-fab"); });
   const renderTally = () => { const t = projectTally([...otherObs, o]); const el = $("#tally"); if(el) el.innerHTML = tallyHTML(t); return t; };
   const renderAnimals = () => {
     urls.forEach(u=>URL.revokeObjectURL(u)); urls.length = 0;
     const tally = renderTally();
     const box = $("#animals");
-    if(!o.animals.length){ box.innerHTML = `<p class="muted">No animals yet. Tap “New animal” for each animal.</p>`; return; }
+    if(!o.animals.length){ box.innerHTML = `<p class="muted">No animals yet. Tap “New animal” for each animal.</p>`; updateFab(); return; }
     box.innerHTML = o.animals.map((s,i) => {
       const ph = photos.filter(x=>x.animalId===s.id).sort((a,b)=>a.seq-b.seq);
       const num = tally.numbers.get(s.id) || {n:"", sp:""};
@@ -1569,11 +1670,11 @@ async function renderObservation(id){
       return `<div class="animal" data-i="${i}">
         <div class="head"><span class="grow">Animal ${num.n} · ID <span class="id">${s.id}</span></span>
           <button class="btn danger small" data-act="del">Delete</button></div>
-        <div class="nums"><span class="pill">No. ${num.n} for this project</span><span class="pill">${esc(speciesLabel(s.species))} no. ${num.sp}</span></div>
+        <div class="nums"><span class="pill">No. ${num.n} for this project</span><span class="pill">${esc(speciesLabel(s.species))} no. ${num.sp}</span>${s.genetic ? `<span class="pill">Genetic sample</span>` : ""}${s.deceased ? `<span class="pill dead">Deceased</span>` : ""}</div>
         <div class="voice">
           <div class="btns" style="margin-top:6px">
-            <button class="btn small ${SpeechRec?"primary":""}" data-act="voice">🎤 Speak</button>
-            <span class="muted" style="align-self:center">e.g. “grass skink, total length 116, SVL 55, regen 18, adult, female, gravid yes”</span>
+            <button class="btn primary speak" data-act="voice">🎤 Speak</button>
+            <span class="muted" style="align-self:center">e.g. “grass skink, total length 116, SVL 55, regen 18, adult, female, gravid yes”. The 🎤 button at the bottom of the screen does the same for the animal you're looking at.</span>
           </div>
           <div class="vrow"><input data-f="voicetext" placeholder="…or type / keyboard-dictate the sentence here"><button class="btn small" data-act="vapply">Apply</button></div>
           ${voiceMsg[s.id] ? `<div class="vres ${voiceMsg[s.id].ok?"":"warn"}">${esc(voiceMsg[s.id].text)} ${voiceMsg[s.id].undo?`<button class="btn small" data-act="vundo">Undo</button>`:""}</div>` : ""}
@@ -1596,11 +1697,17 @@ async function renderObservation(id){
         <label>Age class</label>${seg("age", AGE, s.age)}
         <label>Sex</label>${seg("sex", SEX, s.sex)}
         <div data-gravid class="${s.sex==="Female"?"":"hidden"}"><label>Gravid</label>${seg("gravid", GRAVID, s.gravid)}</div>
+        <div class="checks" style="margin-top:12px">
+          <label class="chk"><input type="checkbox" data-f="genetic" ${s.genetic?"checked":""}> Genetic sample</label>
+          <label class="chk"><input type="checkbox" data-f="deceased" ${s.deceased?"checked":""}> Deceased</label>
+        </div>
         <label>Photos (optional)</label>
         <div class="slots">${VIEWS.map(([tag,name]) => `<div class="slot">
           <button class="btn accent" data-act="photo" data-view="${tag}"><span>📷</span><span>${name}</span></button>
           <div class="thumbs">${ph.filter(x=>x.view===tag).map(thumb).join("")}</div></div>`).join("")}</div>
         ${other.length ? `<label>Earlier photos (no view recorded)</label><div class="thumbs">${other.map(thumb).join("")}</div>` : ""}
+        <label>Notes</label>
+        <textarea data-f="notes" placeholder="Anything else about this animal…">${esc(s.notes)}</textarea>
       </div>`;
     }).join("");
     $$(".animal", box).forEach(el => {
@@ -1618,6 +1725,9 @@ async function renderObservation(id){
       vtlBox.oninput = e => { s.vtl = e.target.value; s.vtlSrc = e.target.value.trim() ? "Measured" : ""; showCalc(); save(); };
       vtlBox.onchange = () => { if(!String(s.vtl).trim()){ recalc(); save(); } };   // box cleared: go back to calculating
       $('[data-f="voicetext"]', el).onkeydown = e => { if(e.key==="Enter"){ e.preventDefault(); const v = e.target.value.trim(); if(v) applyVoice(s, [v]); } };
+      $('[data-f="deceased"]', el).onchange = e => { s.deceased = e.target.checked; save(); renderAnimals(); };
+      $('[data-f="genetic"]', el).onchange = e => { s.genetic = e.target.checked; save(); renderAnimals(); };
+      $('[data-f="notes"]', el).oninput = e => { s.notes = e.target.value; save(); };
       const regenBox = $('[data-f="regen"]', el);
       regenBox.oninput = e => { s.regen = e.target.value; save(); };
       $$("[data-tail]", el).forEach(cb => cb.onchange = () => {
@@ -1639,27 +1749,12 @@ async function renderObservation(id){
       }));
       $$("[data-act]", el).forEach(b => b.onclick = async () => {
         const act = b.dataset.act;
-        if(act==="voice"){
-          if(!SpeechRec){ toast("Voice recognition isn't available in this browser — use the keyboard mic in the box below", 4000); $('[data-f="voicetext"]', el).focus(); return; }
-          if(activeRec){ activeRec.stop(); return; }
-          const rec = new SpeechRec(); activeRec = rec;
-          rec.lang = "en-NZ"; rec.interimResults = true; rec.maxAlternatives = 5; rec.continuous = false;
-          const box = $('[data-f="voicetext"]', el); let done = false;
-          b.textContent = "● Listening… tap to stop"; b.classList.add("accent");
-          rec.onresult = ev => {
-            const res = ev.results[ev.results.length-1];
-            box.value = res[0].transcript;
-            if(res.isFinal){ done = true; applyVoice(s, [...res].map(a => a.transcript)); }
-          };
-          rec.onerror = ev => { toast(ev.error==="network" ? "Voice needs signal on this phone — use the keyboard mic instead" : ev.error==="not-allowed" ? "Microphone permission was blocked" : "Voice error: "+ev.error, 4000); };
-          rec.onend = () => { activeRec = null; if(!done){ b.textContent = "🎤 Speak"; b.classList.remove("accent"); } };
-          try{ rec.start(); }catch(err){ activeRec = null; toast("Couldn't start voice: "+err.message); }
-          return;
-        }
+        if(act==="voice"){ startVoice(s, b, () => "🎤 Speak"); return; }
         if(act==="vapply"){ const v = $('[data-f="voicetext"]', el).value.trim(); if(v) applyVoice(s, [v]); return; }
         if(act==="vundo"){ const u = voiceMsg[s.id]?.undo; if(u){ for(const k of [...Object.keys(VOICE_LABELS), "vtlSrc"]) s[k] = u[k]; delete voiceMsg[s.id]; save(); renderAnimals(); toast("Voice entry undone"); } return; }
         if(act==="del"){
           if(!confirm(`Delete animal ${s.id} and its photos?`)) return;
+          if(activeRec){ try{ activeRec.abort(); }catch(e){} activeRec = null; }
           for(const ph of photos.filter(x=>x.animalId===s.id)){ await DB.del("photos", ph.id); photos.splice(photos.indexOf(ph),1); }
           o.animals.splice(+el.dataset.i,1); await save(); renderAnimals();
         } else if(act==="photo"){ await takePhoto(s, b.dataset.view); }
@@ -1668,6 +1763,7 @@ async function renderObservation(id){
           await DB.del("photos", b.dataset.ph); photos.splice(photos.findIndex(x=>x.id===b.dataset.ph),1); renderAnimals(); }
       });
     });
+    updateFab();
   };
   const takePhoto = async (s, view) => {
     let folderOk = false;
@@ -1689,7 +1785,7 @@ async function renderObservation(id){
     input.click();
   };
   $("#newAnimal").onclick = async () => {
-    const s = { id: await newAnimalId(), createdAt: Date.now(), species: UNKNOWN, total:"", svl:"", vtl:"", vtlSrc:"", tailState:"", regen:"", age:"", sex:"", gravid:"" };
+    const s = { id: await newAnimalId(), createdAt: Date.now(), species: UNKNOWN, total:"", svl:"", vtl:"", vtlSrc:"", tailState:"", regen:"", age:"", sex:"", gravid:"", deceased:false, genetic:false, notes:"" };
     o.animals.push(s); await save(); renderAnimals();
     const last = $$(".animal").pop(); if(last) last.scrollIntoView({behavior:"smooth", block:"start"});
     toast(`Animal no. ${projectTally([...otherObs, o]).numbers.get(s.id).n} for this project`);
@@ -1697,17 +1793,23 @@ async function renderObservation(id){
   renderAnimals();
 }
 
-/* ===================== Export: Excel (draft) ===================== */
-async function exportExcel(projectId){
-  const {wb, name} = await buildWorkbook(projectId);
+/* ===================== Export: Excel — two files, "ARDS records" and "Project data" ===================== */
+const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const EXCEL_KINDS = ["ards", "data"];
+async function exportExcel(projectId, kind){
+  const {wb, name} = await buildWorkbook(projectId, kind);
   XLSX.writeFile(wb, name);
   scheduleFolderSave(projectId);
 }
-async function buildWorkbook(projectId){
+function codesSheet(){
+  return XLSX.utils.aoa_to_sheet([["ARDS codes"],[],["Major habitat"],...MAJOR.filter(m=>m[0]!=="Other"),[],["Micro habitat"],...MICRO.filter(m=>m[0]!=="Other"),[],["Light"],...LIGHT,[],["Temperature"],...TEMP,[],["Wind"],...WIND]);
+}
+async function buildWorkbook(projectId, kind){
   const p = await DB.get("projects", projectId);
   const observers = await DB.all("observers");
   const obs = (await DB.by("observations","projectId",projectId)).sort((a,b)=>a.no-b.no);
   const photos = await DB.by("photos","projectId",projectId);
+  const tally = projectTally(obs);
   const who = sv => { // observers on a survey -> [names, initials, surnames, addresses, affiliations], each joined with "; "
     const list = ((sv && sv.observerIds) || []).map(i => observers.find(x => x.id === i)).filter(Boolean);
     const cols = list.map(ob => {
@@ -1718,37 +1820,54 @@ async function buildWorkbook(projectId){
     });
     return [0,1,2,3,4].map(k => cols.map(c => c[k]).join("; "));
   };
-  const header = ["Locality name","Start date","Survey no.","Survey date","Observers","Initials","Surname","Address","Affiliation",
-    "Obs no.","Obs time","Location","Latitude (WGS84)","Longitude (WGS84)","GPS accuracy (m)","GPS method","Altitude (m)","Altitude source",
-    "Capture type","Major habitat","Micro habitat","Habitat (ARDS code)","Light","Temperature","Wind","Weather (ARDS code)",
-    "Animal no. (project)","Animal ID","Species","Common name","Species no. (project)","Total length (mm)","SVL (mm)","VTL (mm)","VTL source","Tail","Regen (mm)","Age class","Sex","Gravid","Photo files"];
-  const rows = [header];
-  const tally = projectTally(obs);
-  for(const o of obs){
-    const majCode = o.major==="Other" ? (o.majorOther||"Other") : o.major;
-    const micCode = o.micro==="Other" ? (o.microOther||"Other") : o.micro;
-    const sv = surveyOf(p, o);
-    const base = [p.locality, p.date, sv ? sv.no : "", sv ? sv.date : (o.date||""), ...who(sv),
-      o.no, o.time, o.location, o.lat!=null?+o.lat.toFixed(6):"", o.lon!=null?+o.lon.toFixed(6):"", o.acc!=null?Math.round(o.acc):"", o.gpsMethod||"", o.alt, o.alt!==""&&o.alt!=null?(o.altSrc||"Manual"):"",
-      o.capture, o.major==="Other"?o.majorOther:lookup(MAJOR,o.major), o.micro==="Other"?o.microOther:lookup(MICRO,o.micro),
-      [majCode,micCode].filter(Boolean).join(", "),
-      lookup(LIGHT,o.light), lookup(TEMP,o.temp), lookup(WIND,o.wind), [o.light,o.temp,o.wind].filter(Boolean).join(",")];
-    if(!(o.animals||[]).length) rows.push([...base, ...Array(header.length - base.length).fill("")]);
-    for(const s of o.animals||[]){
-      const order = v => { const i = VIEWS.findIndex(x => x[0] === v); return i < 0 ? 9 : i; };
-      const files = photos.filter(x=>x.animalId===s.id).sort((a,b)=>order(a.view)-order(b.view)||a.seq-b.seq).map(x=>photoName(x,s)).join("; ");
-      const num = tally.numbers.get(s.id) || {n:"", sp:""};
-      const vtl = s.vtl||s.tail||"";
-      rows.push([...base, num.n, s.id, s.species, commonName(s.species), num.sp, s.total||"", s.svl, vtl, vtl!=="" ? (s.vtlSrc==="Calculated"?"Calculated (total − SVL)":"Measured") : "",
-        s.tailState||"", s.tailState==="Regen"?(s.regen||""):"", s.age, s.sex, s.gravid, files]);
+  const order = v => { const i = VIEWS.findIndex(x => x[0] === v); return i < 0 ? 9 : i; };
+  const photosOf = s => photos.filter(x => x.animalId === s.id).sort((a,b)=>order(a.view)-order(b.view)||a.seq-b.seq);
+  const habCode = o => [o.major==="Other" ? (o.majorOther||"Other") : o.major, o.micro==="Other" ? (o.microOther||"Other") : o.micro].filter(Boolean).join(", ");
+  const wxCode = o => [o.light,o.temp,o.wind].filter(Boolean).join(",");
+  const lat = o => o.lat!=null ? +o.lat.toFixed(6) : "", lon = o => o.lon!=null ? +o.lon.toFixed(6) : "";
+  let header, rows, sheet, name;
+
+  if(kind === "ards"){
+    // One row per captured animal, laid out like the ARDS card
+    header = ["Initials","Surname","Date","Locality name","Address","Affiliation","Altitude (m)","Latitude (WGS84)","Longitude (WGS84)","Species","Time",
+      "Major habitat","Micro habitat","Habitat (ARDS code)","Light","Temperature","Wind","Weather (ARDS code)","Photographs taken","WAA number","Notes","Animal ID"];
+    rows = [header];
+    for(const o of obs){
+      const sv = surveyOf(p, o), [, initials, surnames, addresses, affs] = who(sv);
+      for(const s of o.animals||[]){
+        const alt = numOrNull(o.alt);
+        rows.push([initials, surnames, sv ? sv.date : (o.date||""), p.locality||"", addresses, affs, alt ?? (o.alt||""), lat(o), lon(o), s.species||"", o.time||"",
+          o.major==="Other"?o.majorOther:lookup(MAJOR,o.major), o.micro==="Other"?o.microOther:lookup(MICRO,o.micro), habCode(o),
+          lookup(LIGHT,o.light), lookup(TEMP,o.temp), lookup(WIND,o.wind), wxCode(o),
+          photosOf(s).length ? "Yes" : "No", p.waa||"", s.notes||"", s.id]);
+      }
     }
+    sheet = "ARDS records"; name = `ARDS_records_${projectFolder(p)}.xlsx`;
+  } else {
+    // Full survey data, one row per animal (observations with no animals get one row)
+    header = ["Locality name","Start date","Survey no.","Survey date","Observers","Obs no.","Obs time","Location","Latitude (WGS84)","Longitude (WGS84)",
+      "Capture type","Habitat (ARDS code)","Weather (ARDS code)","Animal no. (project)","Animal ID","Species","Common name","Species no. (project)",
+      "Total length (mm)","SVL (mm)","VTL (mm)","Tail","Regen (mm)","Age class","Sex","Gravid","Photo files","Deceased","Genetic sample"];
+    rows = [header];
+    for(const o of obs){
+      const sv = surveyOf(p, o);
+      const base = [p.locality||"", p.date||"", sv ? sv.no : "", sv ? sv.date : (o.date||""), who(sv)[0], o.no, o.time||"", o.location||"", lat(o), lon(o),
+        o.capture||"", habCode(o), wxCode(o)];
+      if(!(o.animals||[]).length) rows.push([...base, ...Array(header.length - base.length).fill("")]);
+      for(const s of o.animals||[]){
+        const num = tally.numbers.get(s.id) || {n:"", sp:""};
+        rows.push([...base, num.n, s.id, s.species||"", commonName(s.species), num.sp, s.total||"", s.svl||"", s.vtl||s.tail||"",
+          s.tailState||"", s.tailState==="Regen"?(s.regen||""):"", s.age||"", s.sex||"", s.gravid||"",
+          photosOf(s).map(x => photoName(x, s)).join("; "), s.deceased?"Yes":"", s.genetic?"Yes":""]);
+      }
+    }
+    sheet = "Project data"; name = `Project_data_${projectFolder(p)}.xlsx`;
   }
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws["!cols"] = header.map(h => ({wch: Math.max(10, Math.min(40, h.length+4))}));
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "ARDS records");
-  const codes = [["ARDS codes"],[],["Major habitat"],...MAJOR.filter(m=>m[0]!=="Other"),[],["Micro habitat"],...MICRO.filter(m=>m[0]!=="Other"),[],["Light"],...LIGHT,[],["Temperature"],...TEMP,[],["Wind"],...WIND];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(codes), "Codes");
-  return {wb, name:`ARDS_${projectFolder(p)}.xlsx`};
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, sheet);
+  XLSX.utils.book_append_sheet(wb, codesSheet(), "Codes");
+  return {wb, name};
 }
 
 /* ===================== Export: photos ZIP (stored, no compression) ===================== */
@@ -1778,14 +1897,15 @@ async function exportZip(projectId){
   const p = await DB.get("projects", projectId);
   const obs = await DB.by("observations","projectId",projectId);
   const photos = await DB.by("photos","projectId",projectId);
-  if(!photos.length){ toast("No photos in this record"); return; }
+  if(!photos.length){ toast("No photos in this project"); return; }
   toast("Building ZIP…");
   const files = [];
   for(const ph of photos){
+    if(ph.kind === "datasheet"){ const sv = (p.surveys||[]).find(x => x.id === ph.surveyId); if(sv) files.push({ name: `${projectFolder(p)}/${sheetName(ph, sv)}`, blob: ph.blob }); continue; }
     const o = obs.find(x=>x.id===ph.obsId); const s = o && (o.animals||[]).find(x=>x.id===ph.animalId); if(!o||!s) continue;
     files.push({ name: `${projectFolder(p)}/${obsFolder(o)}/${photoName(ph,s)}`, blob: ph.blob });
   }
-  downloadBlob(await makeZip(files), `ARDS_photos_${projectFolder(p)}.zip`);
+  downloadBlob(await makeZip(files), `Photos_${projectFolder(p)}.zip`);
 }
 
 /* ===================== Backup ===================== */
@@ -1802,7 +1922,7 @@ async function backup(){
 $("#importInput").onchange = async e => {
   const f = e.target.files[0]; if(!f) return;
   try{
-    const d = JSON.parse(await f.text()); if(d.app!=="lizard-ards") throw new Error("Not a Lizard ARDS backup");
+    const d = JSON.parse(await f.text()); if(d.app!=="lizard-ards") throw new Error("Not a Lizard Field Recorder backup");
     for(const k of ["projects","observations","observers"]) for(const x of d[k]||[]) await DB.put(k, k==="observations" ? fixObs(x) : x);
     await migrate();
     toast("Backup restored"); route();
