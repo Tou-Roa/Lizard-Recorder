@@ -695,6 +695,7 @@ header.top{position:sticky;top:0;z-index:1000;background:var(--head);color:var(-
 .trackbar span{flex:1;min-width:0}
 header.top .trackbar button{border-color:#fff;font-weight:700;padding:4px 12px}
 .btn.trk{min-height:54px;font-size:18px}
+.btn.newobs{min-height:60px;font-size:19px;margin:4px 0}
 header.top h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 header.top button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:6px 10px;font-size:15px}
 main{max-width:760px;margin:0 auto;padding:12px 16px 120px}
@@ -741,6 +742,7 @@ button{font:inherit;cursor:pointer}
 .slot .thumb{width:100%;margin-top:8px}
 .slot .thumb img{width:100%;height:auto;aspect-ratio:1}
 .slot .thumb .btn{min-height:30px;padding:2px 7px}
+.slot .btn.slot-add{min-height:34px;font-size:13px;margin-top:4px;padding:4px}
 .tally-total{font-size:17px;margin-bottom:8px}
 .tally-total.second{margin-top:16px}
 .sighting{border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;padding:12px;margin:10px 0;background:var(--bg)}
@@ -798,6 +800,7 @@ body.has-fab .toast{bottom:calc(100px + env(safe-area-inset-bottom))}
 <main id="app"></main>
 <div id="toast" class="toast"></div>
 <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+<input type="file" id="photoPick" accept="image/*" multiple class="hidden">
 <input type="file" id="importInput" accept="application/json" class="hidden">
 
 <script>/* @preserve
@@ -822,6 +825,14 @@ break;case"<bookViews":;case"<bookViews>":;case"</bookViews>":break;case"<workbo
 // Species list: NZTCS 50 — Conservation status of reptiles in Aotearoa New Zealand, 2025 (Hitchmough et al. 2026). [scientific, common, family]
 const SPECIES = [["Caretta caretta", "loggerhead turtle", "Cheloniidae"], ["Chelonia mydas", "green turtle", "Cheloniidae"], ["Dactylocnemis pacificus", "Pacific gecko", "Diplodactylidae"], ["Dactylocnemis “Matapia Island”", "Matapia gecko", "Diplodactylidae"], ["Dactylocnemis “Mokohīnau”", "Mokohīnau gecko", "Diplodactylidae"], ["Dactylocnemis “North Cape”", "Te Paki gecko", "Diplodactylidae"], ["Dactylocnemis “Poor Knights”", "Poor Knights gecko", "Diplodactylidae"], ["Dactylocnemis “Three Kings”", "Three Kings gecko", "Diplodactylidae"], ["Dermochelys coriacea", "leatherback turtle", "Dermochelyidae"], ["Eretmochelys imbricata", "hawksbill turtle", "Cheloniidae"], ["Hoplodactylus duvaucelii", "northern Duvaucel’s gecko", "Diplodactylidae"], ["Hoplodactylus tohu", "Tohu gecko", "Diplodactylidae"], ["Hydrophis platurus", "yellow-bellied sea snake", "Elapidae"], ["Lampropholis delicata", "plague skink", "Scincidae"], ["Laticauda colubrina", "yellow-lipped sea krait", "Laticaudidae"], ["Laticauda laticaudata", "brown lipped sea krait", "Laticaudidae"], ["Laticauda saintgironsi", "Saint-Giron’s sea krait", "Laticaudidae"], ["Lepidochelys olivacea", "olive ridley turtle", "Cheloniidae"], ["Mokopirirakau cryptozoicus", "Takitimu gecko", "Diplodactylidae"], ["Mokopirirakau galaxias", "hura te ao gecko", "Diplodactylidae"], ["Mokopirirakau granulatus", "forest gecko", "Diplodactylidae"], ["Mokopirirakau kahutarae", "black-eyed gecko", "Diplodactylidae"], ["Mokopirirakau nebulosus", "cloudy gecko", "Diplodactylidae"], ["Mokopirirakau “Open Bay Islands”", "Open Bay Islands gecko", "Diplodactylidae"], ["Mokopirirakau “Roys Peak”", "orange-spotted gecko", "Diplodactylidae"], ["Mokopirirakau “cascades”", "cascade gecko", "Diplodactylidae"], ["Mokopirirakau “southern North Island”", "ngahere gecko", "Diplodactylidae"], ["Mokopirirakau “southern forest”", "Tautuku gecko", "Diplodactylidae"], ["Mokopirirakau “Ōkārito”", "broad-cheeked gecko", "Diplodactylidae"], ["Naultinus elegans", "elegant gecko", "Diplodactylidae"], ["Naultinus flavirictus", "Aupouri gecko", "Diplodactylidae"], ["Naultinus gemmeus", "jewelled gecko", "Diplodactylidae"], ["Naultinus grayii", "Northland green gecko", "Diplodactylidae"], ["Naultinus manukanus", "Marlborough green gecko", "Diplodactylidae"], ["Naultinus punctatus", "barking gecko", "Diplodactylidae"], ["Naultinus rudis", "rough gecko", "Diplodactylidae"], ["Naultinus stellatus", "starred gecko", "Diplodactylidae"], ["Naultinus tuberculatus", "West Coast green gecko", "Diplodactylidae"], ["Oligosoma acrinasum", "Fiordland skink", "Scincidae"], ["Oligosoma aeneum", "copper skink", "Scincidae"], ["Oligosoma aff. acrinasum “Many Islands”", "", "Scincidae"], ["Oligosoma aff. alani “Far North”", "", "Scincidae"], ["Oligosoma aff. chloronoton “Clinton? gracile”", "", "Scincidae"], ["Oligosoma aff. chloronoton “Stewart Island”", "Stewart Island green skink", "Scincidae"], ["Oligosoma aff. chloronoton “West Otago”", "Lakes skink", "Scincidae"], ["Oligosoma aff. chloronoton “eastern Otago”", "Otago green skink", "Scincidae"], ["Oligosoma aff. chloronoton “flat head”", "", "Scincidae"], ["Oligosoma aff. inconspicuum “Barn Bay”", "", "Scincidae"], ["Oligosoma aff. inconspicuum “Cascade”", "", "Scincidae"], ["Oligosoma aff. inconspicuum “Central - Southern”", "", "Scincidae"], ["Oligosoma aff. inconspicuum “mahogany”", "mahogany skink", "Scincidae"], ["Oligosoma aff. infrapunctatum “Giles Creek”", "", "Scincidae"], ["Oligosoma aff. infrapunctatum “Westport”", "Westport skink", "Scincidae"], ["Oligosoma aff. infrapunctatum “cobble”", "cobble skink", "Scincidae"], ["Oligosoma aff. infrapunctatum “Ōkārito”", "", "Scincidae"], ["Oligosoma aff. laxa “Marlborough”", "Marlborough scree skink", "Scincidae"], ["Oligosoma aff. laxa “Mt Spencer”", "", "Scincidae"], ["Oligosoma aff. laxa “alpine rock northern”", "Central Canterbury alpine rock skink", "Scincidae"], ["Oligosoma aff. laxa “alpine rock”", "alpine rock skink", "Scincidae"], ["Oligosoma aff. laxa “central Canterbury”", "Central Canterbury scree skink", "Scincidae"], ["Oligosoma aff. longipes “southern”", "southern long-toed skink", "Scincidae"], ["Oligosoma aff. newmani “Buller”", "", "Scincidae"], ["Oligosoma aff. newmani “Douglas Range”", "", "Scincidae"], ["Oligosoma aff. newmani “Garibaldi”", "", "Scincidae"], ["Oligosoma aff. newmani “Gouland Downs”", "", "Scincidae"], ["Oligosoma aff. newmani “Karamea”", "", "Scincidae"], ["Oligosoma aff. newmani “Lockett Range”", "", "Scincidae"], ["Oligosoma aff. newmani “Lonely Lake”", "", "Scincidae"], ["Oligosoma aff. newmani “Mt White, Brown Hill”", "", "Scincidae"], ["Oligosoma aff. newmani “Nelson Lakes alpine – Mt Arthur”", "", "Scincidae"], ["Oligosoma aff. newmani “St Arnaud”", "", "Scincidae"], ["Oligosoma aff. newmani “Westland”", "", "Scincidae"], ["Oligosoma aff. polychroma Clade 2", "Waiharakeke grass skink", "Scincidae"], ["Oligosoma aff. polychroma Clade 3", "south Marlborough grass skink", "Scincidae"], ["Oligosoma aff. polychroma Clade 4", "Canterbury grass skink", "Scincidae"], ["Oligosoma aff. prasinum “Ashburton Lakes”", "Ashburton Lakes spotted skink", "Scincidae"], ["Oligosoma aff. robinsoni “Kaimanawa”", "", "Scincidae"], ["Oligosoma aff. robinsoni “Wairarapa”", "", "Scincidae"], ["Oligosoma aff. smithi “Three Kings, Te Paki, Western Northland”", "tātahi skink", "Scincidae"], ["Oligosoma alani", "robust skink", "Scincidae"], ["Oligosoma albornense", "Alborn Skink", "Scincidae"], ["Oligosoma aureocola", "Mataura skink", "Scincidae"], ["Oligosoma auroraense", "Hawke’s Bay skink", "Scincidae"], ["Oligosoma awakopaka", "awakōpaka skink", "Scincidae"], ["Oligosoma burganae", "Burgan skink", "Scincidae"], ["Oligosoma carinacauda", "Okuru skink", "Scincidae"], ["Oligosoma chionochloescens", "southern grass skink", "Scincidae"], ["Oligosoma chloronoton", "green skink", "Scincidae"], ["Oligosoma elium", "south Marlborough spotted skink", "Scincidae"], ["Oligosoma eludens", "rockhopper skink", "Scincidae"], ["Oligosoma fallai", "Falla’s skink", "Scincidae"], ["Oligosoma grande", "grand skink", "Scincidae"], ["Oligosoma hardyi", "Hardy’s skink", "Scincidae"], ["Oligosoma homalonotum", "chevron skink", "Scincidae"], ["Oligosoma hoparatea", "white-bellied skink", "Scincidae"], ["Oligosoma inconspicuum", "cryptic skink", "Scincidae"], ["Oligosoma infrapunctatum", "speckled skink", "Scincidae"], ["Oligosoma judgei", "Barrier skink", "Scincidae"], ["Oligosoma kahurangi", "Kahurangi skink", "Scincidae"], ["Oligosoma kakerakau", "Whirinaki skink", "Scincidae"], ["Oligosoma kokowai", "northern spotted skink", "Scincidae"], ["Oligosoma laxa", "scree skink", "Scincidae"], ["Oligosoma levidensum", "slight skink", "Scincidae"], ["Oligosoma lineoocellatum", "Canterbury spotted skink", "Scincidae"], ["Oligosoma longipes", "long-toed skink", "Scincidae"], ["Oligosoma maccanni", "McCann’s skink", "Scincidae"], ["Oligosoma macgregori", "McGregor’s skink", "Scincidae"], ["Oligosoma microlepis", "small-scaled skink", "Scincidae"], ["Oligosoma moco", "moko skink", "Scincidae"], ["Oligosoma murihiku", "herbfield skink", "Scincidae"], ["Oligosoma newmani sensu stricto", "Newman’s speckled skink", "Scincidae"], ["Oligosoma nigriplantare", "Chathams skink", "Scincidae"], ["Oligosoma northlandi", "Northland skink", "Scincidae"], ["Oligosoma notosaurus", "southern skink", "Scincidae"], ["Oligosoma oliveri", "marbled skink", "Scincidae"], ["Oligosoma ornatum", "ornate skink", "Scincidae"], ["Oligosoma ornatum longirostrum", "", "Scincidae"], ["Oligosoma otagense", "Otago skink", "Scincidae"], ["Oligosoma pachysomaticum", "southern marbled skink", "Scincidae"], ["Oligosoma pikitanga", "Sinbad skink", "Scincidae"], ["Oligosoma pluvialis", "Big Bay skink", "Scincidae"], ["Oligosoma polychroma", "northern grass skink", "Scincidae"], ["Oligosoma prasinum", "Mackenzie skink", "Scincidae"], ["Oligosoma repens", "Eyres skink", "Scincidae"], ["Oligosoma robinsoni", "crenulate skink", "Scincidae"], ["Oligosoma robinsoni subsp. “Southern North Island”", "Kupe skink", "Scincidae"], ["Oligosoma roimata", "Aorangi skink", "Scincidae"], ["Oligosoma salmo", "Kapitia skink", "Scincidae"], ["Oligosoma smithi", "shore skink", "Scincidae"], ["Oligosoma stenotis", "small-eared skink", "Scincidae"], ["Oligosoma striatum", "striped skink", "Scincidae"], ["Oligosoma suteri", "egg-laying skink", "Scincidae"], ["Oligosoma taumakae", "Taumaka skink", "Scincidae"], ["Oligosoma tekakahu", "Te Kakahu skink", "Scincidae"], ["Oligosoma toka", "Nevis skink", "Scincidae"], ["Oligosoma townsi", "Hauraki skink", "Scincidae"], ["Oligosoma whitakeri", "Whitaker’s skink", "Scincidae"], ["Oligosoma zelandicum", "glossy brown skink", "Scincidae"], ["Sphenodon punctatus", "tuatara", "Sphenodontidae"], ["Toropuku inexpectatus", "northern striped gecko", "Diplodactylidae"], ["Toropuku stephensi", "southern striped gecko", "Diplodactylidae"], ["Tukutuku rakiurae", "harlequin gecko", "Diplodactylidae"], ["Woodworthia cf. brunnea", "Waitaha gecko", "Diplodactylidae"], ["Woodworthia chrysosiretica", "goldstripe gecko", "Diplodactylidae"], ["Woodworthia korowai", "Muriwai gecko", "Diplodactylidae"], ["Woodworthia maculata", "Raukawa gecko", "Diplodactylidae"], ["Woodworthia “Central Otago”", "schist gecko", "Diplodactylidae"], ["Woodworthia “Cromwell”", "Kawarau gecko", "Diplodactylidae"], ["Woodworthia “Kaikōura”", "Kaikōura gecko", "Diplodactylidae"], ["Woodworthia “Marlborough mini”", "minimac gecko", "Diplodactylidae"], ["Woodworthia “Mt Arthur”", "Kahurangi gecko", "Diplodactylidae"], ["Woodworthia “Otago/Southland large”", "kōrero gecko", "Diplodactylidae"], ["Woodworthia “Raggedy”", "Raggedy Range gecko", "Diplodactylidae"], ["Woodworthia “Sabine”", "Tikumu gecko", "Diplodactylidae"], ["Woodworthia “Southern Alps northern”", "greywacke gecko", "Diplodactylidae"], ["Woodworthia “Southern Alps”", "Southern Alps gecko", "Diplodactylidae"], ["Woodworthia “pygmy”", "pygmy gecko", "Diplodactylidae"], ["Woodworthia “south-western”", "south-western large gecko", "Diplodactylidae"], ["Woodworthia “southern mini”", "short-toed gecko", "Diplodactylidae"]];
 const UNKNOWN = "Unknown species";
+// Genus-only choices ("Oligosoma sp.") for when the genus is clear but the species isn't — every gecko/skink genus with more than one taxon
+const GENUS_SP = (() => {
+  const n = {};
+  for(const [sci,, fam] of SPECIES) if(fam === "Diplodactylidae" || fam === "Scincidae"){ const g = sci.split(/\s+/)[0]; n[g] = n[g] || {fam, k:0}; n[g].k++; }
+  return Object.keys(n).filter(g => n[g].k > 1).sort().map(g => [`${g} sp.`, "", n[g].fam]);
+})();
+const GENUS_SET = new Set(GENUS_SP.map(x => x[0]));
+SPECIES.unshift(...GENUS_SP);   // listed first in each family group
 const LOGO = "data:image/png;base64,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";
 const FAMILY_GROUPS = [
   ["Geckos (Diplodactylidae)", ["Diplodactylidae"]],
@@ -936,6 +947,7 @@ function lev(a,b){ if(a===b) return 0; const m=a.length,n=b.length; if(!m||!n) r
   for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev=cur; } return prev[n]; }
 function tokDist(tok, words){ const tol = tok.length>=10?2:tok.length>=5?1:0; let best = 99; for(const w of words){ const d = lev(tok,w); if(d<best) best=d; } return best<=tol ? best : -1; }
 const SPECIES_INDEX = SPECIES.map(([sci,com]) => {
+  if(GENUS_SET.has(sci)) return {sci, names:[[normText(sci.split(" ")[0])]]};   // saying just the genus
   const names = [];
   if(com) names.push(normText(com));
   const tag = (sci.match(/“([^”]+)”/)||[])[1];
@@ -1077,6 +1089,15 @@ function photoName(photo, animal){
 }
 // Survey data sheet photo: YYYYMMDD_SurveyNN_DataSheet_n.jpg (saved next to the Excel file)
 function sheetName(ph, sv){ return `${(sv.date||"").replace(/-/g,"")}_Survey${pad(sv.no)}_DataSheet_${ph.seq}${extFor(ph.type)}`; }
+// Camera (one photo) or gallery (one or more). Resolves with the chosen files.
+function choosePhotos(gallery){
+  return new Promise(res => { const input = $(gallery ? "#photoPick" : "#photoInput"); input.value = ""; input.onchange = () => res([...input.files]); input.click(); });
+}
+// Observed-group photo: YYYYMMDD_HHMM_ObsNN_Seen_<species code / group / animal>[_n].jpg
+function sightingPhotoName(ph, o, g){
+  const what = g.group === "Other" ? safe(g.name || "Other") : (g.species && g.species !== UNKNOWN ? speciesCode(g.species) : g.group);
+  return `${stamp(ph.takenAt)}_Obs${pad(o.no)}_Seen_${what}${ph.seq>1?"_"+ph.seq:""}${extFor(ph.type)}`;
+}
 /* ---- Measurements: VTL = total length − SVL (unless VTL was typed in) ---- */
 function numOrNull(v){ const t = String(v ?? "").trim().replace(",","."); if(t === "") return null; const n = Number(t); return isFinite(n) ? n : null; }
 function calcVtl(a){ // returns true if a.vtl changed
@@ -1325,6 +1346,7 @@ async function route(){
   const h = location.hash.slice(1).split("/").filter(Boolean);
   const back = $("#backBtn");
   if(h[0]==="p" && h[1]){ back.classList.remove("hidden"); back.onclick=()=>location.hash="#/"; await renderProject(h[1]); }
+  else if(h[0]==="s" && h[1] && h[2]){ back.classList.remove("hidden"); back.onclick=()=>location.hash=`#/p/${h[1]}`; await renderSurvey(h[1], h[2]); }
   else if(h[0]==="o" && h[1]){ back.classList.remove("hidden"); await renderObservation(h[1]); }
   else { back.classList.add("hidden"); await renderHome(); }
   window.scrollTo(0,0);
@@ -1364,8 +1386,6 @@ async function renderHome(){
     </div>`;
   $("#newProj").onclick = async () => {
     const p = { id:uid(), locality:"", date:todayISO(), surveys:[], createdAt:Date.now() };
-    const known = new Set((await DB.all("observers")).map(o => o.id));
-    newSurvey(p, p.date, (settings.lastObserverIds || (settings.lastObserverId ? [settings.lastObserverId] : [])).filter(i => known.has(i)));
     await DB.put("projects", p); location.hash = `#/p/${p.id}`;
   };
   $$("#projList .list-item").forEach(el => el.onclick = () => location.hash = `#/p/${el.dataset.id}`);
@@ -1424,6 +1444,7 @@ async function saveProjectToFolder(projectId, withPhotos){
       const obs = await DB.by("observations","projectId",projectId);
       for(const ph of await DB.by("photos","projectId",projectId)){
         if(ph.kind === "datasheet"){ const sv = (p.surveys||[]).find(x => x.id === ph.surveyId); if(sv) await FS.write([projectFolder(p)], sheetName(ph, sv), ph.blob); continue; }
+        if(ph.kind === "sighting"){ const o = obs.find(x => x.id === ph.obsId), g = o && (o.sightings||[]).find(x => x.id === ph.sightingId); if(g) await FS.write([projectFolder(p), obsFolder(o)], sightingPhotoName(ph, o, g), ph.blob); continue; }
         const o = obs.find(x=>x.id===ph.obsId); const an = o && (o.animals||[]).find(x=>x.id===ph.animalId); if(!o||!an) continue;
         await FS.write([projectFolder(p), obsFolder(o)], photoName(ph, an), ph.blob);
       }
@@ -1479,30 +1500,119 @@ async function migrate(){
       if(CAPTURE_OLD[o.capture]){ o.capture = CAPTURE_OLD[o.capture]; oc = true; }
       if(oc) await DB.put("observations", o);
     }
-    if(!p.surveys.length){ newSurvey(p, p.date || todayISO(), base); changed = true; }
+    if(!p.surveys.length && base.length){ newSurvey(p, p.date || todayISO(), base); changed = true; }   // keep an old project's observer
     if("observerId" in p){ delete p.observerId; changed = true; }
     if(changed) await DB.put("projects", p);
   }
 }
 
 /* ===================== Project ===================== */
+// Shared pieces for the project page and the survey (observations) page
+function obsItemHTML(o){
+  const counts = [(o.animals||[]).length ? `${(o.animals||[]).length} captured` : "", (o.sightings||[]).length ? `${(o.sightings||[]).reduce((n,g)=>n+(+g.count||0),0)} observed` : ""].filter(Boolean).join(" · ")
+    || (DEVICE[o.capture] && o.noCapture ? "no capture" : "no animals yet");
+  const cap = DEVICE[o.capture] ? ` · ${DEVICE[o.capture]}${String(o.line||"").trim() ? ` line ${esc(o.line)}` : ""}${String(o.device||"").trim() ? ` #${esc(o.device)}` : ""}` : o.capture ? " · "+esc(o.capture) : "";
+  return `<div class="list-item" data-id="${o.id}"><div class="grow">
+      <div class="title">Obs ${o.no} · ${esc(o.time||"")} ${o.location?"· "+esc(o.location):""}</div>
+      <div class="sub">${counts}${cap}${o.lat!=null?` · ${o.lat.toFixed(5)}, ${o.lon.toFixed(5)}`:" · no GPS"}</div>
+      <div>${[...new Set((o.animals||[]).map(s=>s.species))].map(s=>`<span class="pill">${esc(s)}</span>`).join("")}</div>
+    </div><span class="chev">›</span></div>`;
+}
+function exportCardHTML(withDelete){
+  return `<div class="card">
+      <h2>Export</h2>
+      <div class="btns">
+        <button class="btn accent" id="xlsxArds">Export ARDS records</button>
+        <button class="btn accent" id="xlsxData">Export Project data</button>
+        <button class="btn" id="zip">Download photos (ZIP)</button>
+      </div>
+      <p class="muted"><b>ARDS records</b>: one row per captured animal, in ARDS card order. <b>Project data</b>: all survey and measurement data, one row per animal.</p>
+      ${withDelete ? `<div class="btns"><button class="btn danger small" id="delProj">Delete this project</button></div>` : ""}
+    </div>`;
+}
+function wireExport(id){
+  $("#xlsxArds").onclick = () => exportExcel(id, "ards");
+  $("#xlsxData").onclick = () => exportExcel(id, "data");
+  $("#zip").onclick = () => exportZip(id);
+}
+function tallyCardHTML(allObs){
+  return `<div class="card">
+      <h2>Project tally</h2>
+      <p class="muted">Running count for the whole project, across all its surveys.</p>
+      ${tallyHTML(projectTally(allObs))}
+      <div id="sheetBox"></div>
+    </div>`;
+}
+// Data sheet photos, shown in the tally card. canAdd: the survey page (one survey); otherwise list every survey's sheets.
+function mountSheets(p, svList, canAdd){
+  const urls = []; onLeave(() => urls.forEach(u => URL.revokeObjectURL(u)));
+  const draw = async () => {
+    const box = $("#sheetBox"); if(!box) return;
+    urls.splice(0).forEach(u => URL.revokeObjectURL(u));
+    const all = (await DB.by("photos","projectId",p.id)).filter(x => x.kind === "datasheet");
+    const parts = svList.map(sv => {
+      const sh = all.filter(x => x.surveyId === sv.id).sort((a,b) => a.seq - b.seq);
+      if(!sh.length && !canAdd) return "";
+      const thumbs = sh.map(x => { const u = URL.createObjectURL(x.blob); urls.push(u);
+        return `<div class="thumb"><img src="${u}" alt="Data sheet ${x.seq}"><div class="fn">${esc(sheetName(x, sv))}</div><button class="btn small" data-sh="dl" data-ph="${x.id}">Save</button> <button class="btn small danger" data-sh="rm" data-ph="${x.id}">✕</button></div>`; }).join("");
+      return `${canAdd ? "" : `<div class="muted" style="margin-top:8px">Survey ${sv.no} · ${esc(sv.date||"")}</div>`}<div class="thumbs sheets">${thumbs}</div>
+        ${canAdd ? `<div class="btns"><button class="btn accent" data-sh="add" data-sv="${sv.id}">📷 Data sheet photo</button></div>` : ""}`;
+    }).join("");
+    box.innerHTML = `<h3>Data sheet photos</h3>` + (canAdd ? `<p class="muted" style="margin:0">Photograph the paper data sheet for this survey. Saved next to the Excel files.</p>` : "")
+      + (parts || `<p class="muted">None yet — add them from a survey's page.</p>`);
+    $$("[data-sh]", box).forEach(b => b.onclick = async () => {
+      const act = b.dataset.sh;
+      if(act === "add"){
+        const sv = svList.find(s => s.id === b.dataset.sv); if(!sv) return;
+        let folderOk = false;
+        if(FS.root){ try{ folderOk = await FS.ready(true); }catch(e){} }
+        const input = $("#photoInput"); input.value = "";
+        input.onchange = async () => {
+          const file = input.files[0]; if(!file) return;
+          const seq = all.filter(x => x.surveyId === sv.id).reduce((m,x) => Math.max(m, x.seq), 0) + 1;
+          const ph = { id:uid(), projectId:p.id, surveyId:sv.id, kind:"datasheet", takenAt:Date.now(), seq, type:file.type||"image/jpeg", blob:file };
+          await DB.put("photos", ph); scheduleFolderSave(p.id);
+          const name = sheetName(ph, sv);
+          if(folderOk){
+            try{ await FS.write([projectFolder(p)], name, file); toast(`Saved to ${FS.root.name}/${projectFolder(p)}`); }
+            catch(e){ toast("Couldn't write to folder — photo kept in app"); }
+          } else if(settings.autoDownload){ downloadBlob(file, name); toast("Data sheet saved: " + name); }
+          else toast("Data sheet stored in app: " + name);
+          draw();
+        };
+        input.click(); return;
+      }
+      const ph = all.find(x => x.id === b.dataset.ph); if(!ph) return;
+      const sv = (p.surveys||[]).find(s => s.id === ph.surveyId) || {};
+      if(act === "dl") downloadBlob(ph.blob, sheetName(ph, sv));
+      else { if(!confirm("Remove this data sheet photo from the app?")) return; await DB.del("photos", ph.id); draw(); }
+    });
+  };
+  return draw();
+}
+async function startSurvey(p){
+  const today = todayISO(), surveys = [...(p.surveys||[])].sort((a,b) => a.no - b.no), last = surveys[surveys.length-1];
+  const same = surveys.find(s => s.date === today);
+  if(same && !confirm(`Survey ${same.no} is already dated today. Start another survey for today?`)){ location.hash = `#/s/${p.id}/${same.id}`; return; }
+  const known = new Set((await DB.all("observers")).map(o => o.id));
+  const obsIds = last ? last.observerIds : (settings.lastObserverIds || (settings.lastObserverId ? [settings.lastObserverId] : []));
+  const s = newSurvey(p, today, obsIds.filter(i => known.has(i)));
+  s.type = last ? (last.type || "") : "";   // same kind of survey as last time
+  p.curSurvey = s.id; await DB.put("projects", p); scheduleFolderSave(p.id);
+  toast(`Survey ${s.no} started — ${s.date}`);
+  location.hash = `#/s/${p.id}/${s.id}`;
+}
+
 async function renderProject(id){
   const p = await DB.get("projects", id);
   if(!p){ location.hash="#/"; return; }
-  if(!Array.isArray(p.surveys) || !p.surveys.length){ newSurvey(p, p.date || todayISO(), []); await DB.put("projects", p); }
+  if(!Array.isArray(p.surveys)) p.surveys = [];
   $("#title").textContent = p.locality || "New project";
-  const observers = (await DB.all("observers")).sort((a,b)=>a.name.localeCompare(b.name));
+  const observers = await DB.all("observers");
   const allObs = (await DB.by("observations","projectId",id)).sort((a,b)=>a.no-b.no);
-  const surveys = [...p.surveys].sort((a,b)=>a.no-b.no);
-  const sv = surveys.find(s => s.id === p.curSurvey) || surveys[surveys.length-1];
-  const obs = allObs.filter(o => o.surveyId === sv.id);
-  const chosen = sv.observerIds.map(i => observers.find(o => o.id === i)).filter(Boolean);
+  const surveys = [...p.surveys].sort((a,b)=>b.no-a.no);   // newest first
   const nObs = s => allObs.filter(o => o.surveyId === s.id).length;
-  const projPhotos = await DB.by("photos","projectId",id);
-  // Spotlight track box: shown once the project uses spotlighting, or this survey has a track
-  const showTrackBox = allObs.some(o => o.capture === "Spotlighting") || (Track.cur && Track.cur.surveyId === sv.id) || (await surveyTracks(sv.id)).length > 0;
-  const sheets = projPhotos.filter(x => x.kind === "datasheet" && x.surveyId === sv.id).sort((a,b)=>a.seq-b.seq);
-  const sheetUrls = sheets.map(x => URL.createObjectURL(x.blob)); onLeave(() => sheetUrls.forEach(u => URL.revokeObjectURL(u)));
+  const names = s => s.observerIds.map(i => (observers.find(o => o.id === i)||{}).name).filter(Boolean).join(", ");
   const app = $("#app");
   app.innerHTML = (await folderBanner()) + `
     <div class="card">
@@ -1517,85 +1627,108 @@ async function renderProject(id){
     </div>
 
     <div class="card">
-      <h2><span class="num">2</span> Survey</h2>
-      <p class="muted">One survey for each day of field work. Its date and observers apply to every observation in it.</p>
-      <label for="sSel">Survey</label>
-      <select id="sSel">${surveys.map(s => `<option value="${s.id}" ${s.id===sv.id?"selected":""}>Survey ${s.no} · ${esc(s.date||"no date")} · ${nObs(s)} obs</option>`).join("")}</select>
-      <div class="btns"><button class="btn primary small" id="newSurvey">＋ New survey (next day)</button></div>
-      <label for="sDate">Date</label>
-      <input id="sDate" type="date" value="${esc(sv.date)}">
-      <label for="sObsAdd">Observers</label>
-      <div id="obsChosen">${chosen.length ? chosen.map(o => `<div class="observer-box" data-id="${o.id}">
-          <div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0"><b>${esc(o.name)}</b><br>${esc(o.address).replace(/\n/g,"<br>")||"<span class='muted'>No address</span>"}<br><i>${esc(o.affiliation)||""}</i></div>
-          <div style="display:flex;flex-direction:column;gap:6px"><button class="btn small" data-act="editObs">Edit</button><button class="btn small danger" data-act="rmObs">Remove</button></div></div></div>`).join("")
-        : `<p class="muted">No observers on this survey yet.</p>`}</div>
-      <select id="sObsAdd" style="margin-top:8px"><option value="">＋ Add observer from saved list…</option>
-        ${observers.filter(o => !sv.observerIds.includes(o.id)).map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join("")}
-      </select>
-      <div class="btns"><button class="btn small" id="addUser">＋ Add user</button>
-        ${surveys.length>1 ? `<button class="btn small danger" id="delSurvey" style="margin-left:auto">Delete this survey</button>` : ""}</div>
-      ${showTrackBox ? `<div id="trackBox" class="subpanel"></div>` : ""}
-      <label>Data sheet photos</label>
-      <p class="muted" style="margin:0">Photograph the paper data sheet for this survey. Saved next to the Excel file.</p>
-      <div class="thumbs sheets">${sheets.map((x,i) => `<div class="thumb"><img src="${sheetUrls[i]}" alt="Data sheet ${x.seq}"><div class="fn">${esc(sheetName(x, sv))}</div><button class="btn small" data-sh="dl" data-ph="${x.id}">Save</button> <button class="btn small danger" data-sh="rm" data-ph="${x.id}">✕</button></div>`).join("")}</div>
-      <div class="btns"><button class="btn accent" id="addSheet">📷 Data sheet photo</button></div>
-      <div id="userPanel" class="subpanel hidden">
-        <input type="hidden" id="uId">
-        <label for="uName">Full name</label><input id="uName" autocomplete="name">
-        <label for="uAddr">Address</label><textarea id="uAddr" autocomplete="street-address"></textarea>
-        <label for="uAff">Affiliation</label><input id="uAff" autocomplete="organization">
-        <div class="btns"><button class="btn primary" id="uSave">Save observer</button><button class="btn" id="uCancel">Cancel</button><button class="btn danger hidden" id="uDel">Delete</button></div>
-      </div>
+      <h2><span class="num">2</span> Surveys</h2>
+      <p class="muted">One survey for each day of field work. Starting a survey opens its own page, where you add observations.</p>
+      <button class="btn primary block" id="newSurvey">${surveys.length ? "＋ Start new survey (today)" : "▶ Start survey"}</button>
+      <div id="surveyList">${surveys.map(s => `<div class="list-item" data-sv="${s.id}"><div class="grow">
+          <div class="title">Survey ${s.no} · ${esc(s.date||"no date")}</div>
+          <div class="sub">${nObs(s)} observation${nObs(s)===1?"":"s"}${names(s) ? " · " + esc(names(s)) : ""}</div>
+        </div><span class="chev">›</span></div>`).join("") || `<p class="muted">No surveys yet.</p>`}</div>
     </div>
-
-    <div class="card">
-      <h2><span class="num">3</span> Observations</h2>
-      <p class="muted">In Survey ${sv.no}${sv.date?" · "+esc(sv.date):""}. Switch surveys above to see other days.</p>
-      <button class="btn primary block" id="newObs">＋ New observation</button>
-      <div id="obsList">${obs.length ? obs.map(o => `
-        <div class="list-item" data-id="${o.id}"><div class="grow">
-          <div class="title">Obs ${o.no} · ${esc(o.time||"")} ${o.location?"· "+esc(o.location):""}</div>
-          <div class="sub">${[(o.animals||[]).length ? `${(o.animals||[]).length} captured` : "", (o.sightings||[]).length ? `${(o.sightings||[]).reduce((n,g)=>n+(+g.count||0),0)} observed` : ""].filter(Boolean).join(" · ") || (DEVICE[o.capture] && o.noCapture ? "no capture" : "no animals yet")}${DEVICE[o.capture] ? ` · ${DEVICE[o.capture]}${String(o.line||"").trim() ? ` line ${esc(o.line)}` : ""}${String(o.device||"").trim() ? ` #${esc(o.device)}` : ""}` : o.capture ? " · "+esc(o.capture) : ""}${o.lat!=null?` · ${o.lat.toFixed(5)}, ${o.lon.toFixed(5)}`:" · no GPS"}</div>
-          <div>${[...new Set((o.animals||[]).map(s=>s.species))].map(s=>`<span class="pill">${esc(s)}</span>`).join("")}</div>
-        </div><span class="chev">›</span></div>`).join("") : `<p class="muted">No observations in this survey yet.</p>`}</div>
-    </div>
-
-    <div class="card">
-      <h2>Project tally</h2>
-      <p class="muted">Running count for the whole project, across all its surveys.</p>
-      ${tallyHTML(projectTally(allObs))}
-    </div>
-
-    <div class="card">
-      <h2>Export</h2>
-      <div class="btns">
-        <button class="btn accent" id="xlsxArds">Export ARDS records</button>
-        <button class="btn accent" id="xlsxData">Export Project data</button>
-        <button class="btn" id="zip">Download photos (ZIP)</button>
-      </div>
-      <p class="muted"><b>ARDS records</b>: one row per captured animal, in ARDS card order. <b>Project data</b>: all survey and measurement data, one row per animal.</p>
-      <div class="btns"><button class="btn danger small" id="delProj">Delete this project</button></div>
-    </div>`;
+    ${tallyCardHTML(allObs)}
+    ${exportCardHTML(true)}`;
 
   wireFolderBanner();
   const save = async () => { await DB.put("projects", p); scheduleFolderSave(p.id); };
-  const rememberObservers = () => { settings.lastObserverIds = [...sv.observerIds]; return saveSettings(); };
   $("#pLoc").oninput = e => { p.locality = e.target.value; $("#title").textContent = p.locality || "New project"; save(); };
   $("#pDate").onchange = e => { p.date = e.target.value; save(); };
   $("#pWaa").oninput = e => { p.waa = e.target.value.trim(); save(); };
-
-  // Survey
-  $("#sSel").onchange = async e => { p.curSurvey = e.target.value; await save(); renderProject(id); };
-  $("#newSurvey").onclick = async () => {
-    const s = newSurvey(p, todayISO(), sv.observerIds); p.curSurvey = s.id; await save();
-    await renderProject(id); toast(`Survey ${s.no} started — ${s.date}`);
+  $("#newSurvey").onclick = () => startSurvey(p);
+  $$("#surveyList .list-item").forEach(el => el.onclick = () => location.hash = `#/s/${id}/${el.dataset.sv}`);
+  mountSheets(p, surveys, false);
+  wireExport(id);
+  $("#delProj").onclick = async () => {
+    if(!confirm("Delete this project, all its surveys, observations, animals and stored photos? This cannot be undone.")) return;
+    for(const o of allObs) await DB.del("observations", o.id);
+    for(const ph of await DB.by("photos","projectId",id)) await DB.del("photos", ph.id);
+    if(Track.cur && Track.cur.projectId === id) await Track.end();
+    for(const t of (await allTracks()).filter(t => t.projectId === id)) await DB.del("kv", "track:" + t.id);
+    await DB.del("projects", id); location.hash = "#/";
   };
+}
+
+/* ===================== Survey (observations page) ===================== */
+async function renderSurvey(pid, sid){
+  const p = await DB.get("projects", pid);
+  if(!p){ location.hash = "#/"; return; }
+  const sv = (p.surveys||[]).find(s => s.id === sid);
+  if(!sv){ location.hash = `#/p/${pid}`; return; }
+  if(p.curSurvey !== sv.id){ p.curSurvey = sv.id; DB.put("projects", p); }
+  $("#title").textContent = `Survey ${sv.no} · ${p.locality || "New project"}`;
+  const observers = (await DB.all("observers")).sort((a,b)=>a.name.localeCompare(b.name));
+  const allObs = (await DB.by("observations","projectId",pid)).sort((a,b)=>a.no-b.no);
+  const obs = allObs.filter(o => o.surveyId === sv.id);
+  const chosen = sv.observerIds.map(i => observers.find(o => o.id === i)).filter(Boolean);
+  const showTrackBox = allObs.some(o => o.capture === "Spotlighting") || (Track.cur && Track.cur.surveyId === sv.id) || (await surveyTracks(sv.id)).length > 0;
+  const editOpen = !!renderSurvey.editOpen;
+  const app = $("#app");
+  app.innerHTML = (await folderBanner()) + `
+    <div class="card">
+      <h2>Survey ${sv.no} <span class="muted" style="font-weight:400">· ${esc(sv.date||"no date")}</span></h2>
+      <div class="muted">${chosen.length ? "Observers: " + chosen.map(o => esc(o.name)).join(", ") : "No observers on this survey yet."}</div>
+      ${sv.type ? `<div class="muted">Survey type: <b>${esc(sv.type)}</b></div>`
+        : `<label for="sTypeQuick">Survey type</label>${selectHTML("sTypeQuick", CAPTURE.map(c=>[c,c]), "", "— Choose the survey type —", false)}`}
+      <div class="btns"><button class="btn small" id="svEditBtn">${editOpen ? "Hide survey details ▴" : "Edit date, type & observers ▾"}</button></div>
+      <div id="svEdit" class="${editOpen ? "" : "hidden"}">
+        <label for="sDate">Date</label>
+        <input id="sDate" type="date" value="${esc(sv.date)}">
+        <label for="sType">Survey type</label>
+        ${selectHTML("sType", CAPTURE.concat(sv.type && !CAPTURE.includes(sv.type) ? [sv.type] : []).map(c=>[c,c]), sv.type||"", "— Select —", false)}
+        <p class="muted" style="margin:4px 0 0">New observations take this as their capture type; change it on an observation for a one-off (an incidental find, or a different trap within the line).</p>
+        <label for="sObsAdd">Observers</label>
+        <div id="obsChosen">${chosen.length ? chosen.map(o => `<div class="observer-box" data-id="${o.id}">
+            <div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1;min-width:0"><b>${esc(o.name)}</b><br>${esc(o.address).replace(/\n/g,"<br>")||"<span class='muted'>No address</span>"}<br><i>${esc(o.affiliation)||""}</i></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><button class="btn small" data-act="editObs">Edit</button><button class="btn small danger" data-act="rmObs">Remove</button></div></div></div>`).join("")
+          : `<p class="muted">No observers on this survey yet.</p>`}</div>
+        <select id="sObsAdd" style="margin-top:8px"><option value="">＋ Add observer from saved list…</option>
+          ${observers.filter(o => !sv.observerIds.includes(o.id)).map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join("")}
+        </select>
+        <div class="btns"><button class="btn small" id="addUser">＋ Add user</button>
+          <button class="btn small danger" id="delSurvey" style="margin-left:auto">Delete this survey</button></div>
+        <div id="userPanel" class="subpanel hidden">
+          <input type="hidden" id="uId">
+          <label for="uName">Full name</label><input id="uName" autocomplete="name">
+          <label for="uAddr">Address</label><textarea id="uAddr" autocomplete="street-address"></textarea>
+          <label for="uAff">Affiliation</label><input id="uAff" autocomplete="organization">
+          <div class="btns"><button class="btn primary" id="uSave">Save observer</button><button class="btn" id="uCancel">Cancel</button><button class="btn danger hidden" id="uDel">Delete</button></div>
+        </div>
+      </div>
+      ${showTrackBox ? `<div id="trackBox" class="subpanel"></div>` : ""}
+    </div>
+
+    <button class="btn primary block newobs" id="newObs">＋ New observation</button>
+
+    <div class="card">
+      <h2>Observations <span class="muted" style="font-weight:400">· ${obs.length}</span></h2>
+      <div id="obsList">${obs.length ? [...obs].reverse().map(obsItemHTML).join("") : `<p class="muted">No observations in this survey yet. Tap “New observation”.</p>`}</div>
+    </div>
+    ${tallyCardHTML(allObs)}
+    ${exportCardHTML(false)}`;
+
+  wireFolderBanner();
+  const save = async () => { await DB.put("projects", p); scheduleFolderSave(p.id); };
+  const rerender = () => renderSurvey(pid, sid);
+  const rememberObservers = () => { settings.lastObserverIds = [...sv.observerIds]; return saveSettings(); };
+  $("#svEditBtn").onclick = () => { renderSurvey.editOpen = !renderSurvey.editOpen; $("#svEdit").classList.toggle("hidden", !renderSurvey.editOpen); $("#svEditBtn").textContent = renderSurvey.editOpen ? "Hide survey details ▴" : "Edit date, type & observers ▾"; };
+  $("#sType").onchange = async e => { sv.type = e.target.value; await save(); rerender(); };
+  const quick = $("#sTypeQuick"); if(quick) quick.onchange = async e => { sv.type = e.target.value; await save(); rerender(); };
+  onLeave(() => { renderSurvey.editOpen = false; });
   $("#sDate").onchange = async e => {
     sv.date = e.target.value;
     for(const o of obs){ o.date = sv.date; await DB.put("observations", o); }
-    await save(); renderProject(id);
+    await save(); rerender();
   };
-  $("#sObsAdd").onchange = async e => { if(!e.target.value) return; sv.observerIds.push(e.target.value); await rememberObservers(); await save(); renderProject(id); };
+  $("#sObsAdd").onchange = async e => { if(!e.target.value) return; sv.observerIds.push(e.target.value); await rememberObservers(); await save(); rerender(); };
   const panel = $("#userPanel");
   const openPanel = (o) => {
     panel.classList.remove("hidden");
@@ -1605,7 +1738,7 @@ async function renderProject(id){
   $$("#obsChosen .observer-box").forEach(box => {
     const oid = box.dataset.id;
     $('[data-act="editObs"]', box).onclick = () => openPanel(observers.find(x => x.id === oid));
-    $('[data-act="rmObs"]', box).onclick = async () => { sv.observerIds = sv.observerIds.filter(x => x !== oid); await rememberObservers(); await save(); renderProject(id); };
+    $('[data-act="rmObs"]', box).onclick = async () => { sv.observerIds = sv.observerIds.filter(x => x !== oid); await rememberObservers(); await save(); rerender(); };
   });
   $("#addUser").onclick = () => openPanel(null);
   $("#uCancel").onclick = () => panel.classList.add("hidden");
@@ -1615,73 +1748,41 @@ async function renderProject(id){
     await DB.put("observers", o);
     if(!sv.observerIds.includes(o.id)) sv.observerIds.push(o.id);
     await rememberObservers(); await save();
-    toast("Observer saved"); renderProject(id);
+    toast("Observer saved"); rerender();
   };
   $("#uDel").onclick = async () => {
     if(!confirm("Delete this observer from the saved list?")) return;
     const oid = $("#uId").value;
     await DB.del("observers", oid);
     for(const s of p.surveys) s.observerIds = s.observerIds.filter(x => x !== oid);
-    await save(); renderProject(id);
+    await save(); rerender();
   };
-  $("#addSheet").onclick = async () => {
-    let folderOk = false;
-    if(FS.root){ try{ folderOk = await FS.ready(true); }catch(e){} }
-    const input = $("#photoInput"); input.value = "";
-    input.onchange = async () => {
-      const file = input.files[0]; if(!file) return;
-      const seq = sheets.reduce((m,x)=>Math.max(m,x.seq),0)+1;
-      const ph = { id:uid(), projectId:id, surveyId:sv.id, kind:"datasheet", takenAt:Date.now(), seq, type:file.type||"image/jpeg", blob:file };
-      await DB.put("photos", ph); scheduleFolderSave(id);
-      const name = sheetName(ph, sv);
-      if(folderOk){
-        try{ await FS.write([projectFolder(p)], name, file); toast(`Saved to ${FS.root.name}/${projectFolder(p)}`); }
-        catch(e){ toast("Couldn't write to folder — photo kept in app"); }
-      } else if(settings.autoDownload){ downloadBlob(file, name); toast("Data sheet saved: " + name); }
-      else toast("Data sheet stored in app: " + name);
-      renderProject(id);
-    };
-    input.click();
-  };
-  $$("[data-sh]").forEach(b => b.onclick = async () => {
-    const ph = sheets.find(x => x.id === b.dataset.ph); if(!ph) return;
-    if(b.dataset.sh === "dl") downloadBlob(ph.blob, sheetName(ph, sv));
-    else { if(!confirm("Remove this data sheet photo from the app?")) return; await DB.del("photos", ph.id); renderProject(id); }
-  });
-  if(showTrackBox) mountTrackBox(p, sv);
-  const ds = $("#delSurvey"); if(ds) ds.onclick = async () => {
+  $("#delSurvey").onclick = async () => {
     if(!confirm(obs.length ? `Delete Survey ${sv.no} with its ${obs.length} observation${obs.length===1?"":"s"}, their animals and stored photos? This cannot be undone.` : `Delete Survey ${sv.no}?`)) return;
     for(const o of obs){ for(const ph of await DB.by("photos","obsId",o.id)) await DB.del("photos", ph.id); await DB.del("observations", o.id); }
-    for(const ph of sheets) await DB.del("photos", ph.id);
+    for(const ph of (await DB.by("photos","projectId",pid)).filter(x => x.kind === "datasheet" && x.surveyId === sv.id)) await DB.del("photos", ph.id);
     if(Track.cur && Track.cur.surveyId === sv.id) await Track.end();
     for(const t of await surveyTracks(sv.id)) await DB.del("kv", "track:" + t.id);
     p.surveys = p.surveys.filter(s => s.id !== sv.id); delete p.curSurvey;
-    await save(); renderProject(id);
+    await save(); location.hash = `#/p/${pid}`;
   };
+  if(showTrackBox) mountTrackBox(p, sv);
+  mountSheets(p, [sv], true);
 
   $("#newObs").onclick = async () => {
     const prev = allObs[allObs.length-1];   // latest observation in the project: its settings carry over
-    const o = { id:uid(), projectId:id, surveyId:sv.id, no:(prev?prev.no:0)+1, date:sv.date, time:nowHM(), location:"", alt:"", lat:null, lon:null, acc:null, gpsMethod:"",
-      capture: prev?.capture||"", major: prev?.major||"", majorOther: prev?.majorOther||"", micro: prev?.micro||"", microOther: prev?.microOther||"",
+    const o = { id:uid(), projectId:pid, surveyId:sv.id, no:(prev?prev.no:0)+1, date:sv.date, time:nowHM(), location:"", alt:"", lat:null, lon:null, acc:null, gpsMethod:"",
+      capture: sv.type || prev?.capture || "", major: prev?.major||"", majorOther: prev?.majorOther||"", micro: prev?.micro||"", microOther: prev?.microOther||"",
       light: prev?.light||"", temp: prev?.temp||"", wind: prev?.wind||"", animals:[], sightings:[],
       captured: prev ? prev.captured !== false : true, observed: !!(prev && prev.observed), createdAt:Date.now() };
-    if(prev && DEVICE[prev.capture] && prev.capture === o.capture){   // same line, next ACO / GMT number
-      o.line = prev.line || ""; const nx = nextDevice(p, allObs, o); o.device = nx.n; o.devAuto = true;
+    const lastSame = [...allObs].reverse().find(x => x.capture === o.capture);
+    if(lastSame && DEVICE[o.capture]){   // same line, next ACO / GMT / pitfall number
+      o.line = lastSame.line || ""; const nx = nextDevice(p, allObs, o); o.device = nx.n; o.devAuto = true;
     }
     await DB.put("observations", o); location.hash = `#/o/${o.id}`;
   };
   $$("#obsList .list-item").forEach(el => el.onclick = () => location.hash = `#/o/${el.dataset.id}`);
-  $("#xlsxArds").onclick = () => exportExcel(id, "ards");
-  $("#xlsxData").onclick = () => exportExcel(id, "data");
-  $("#zip").onclick = () => exportZip(id);
-  $("#delProj").onclick = async () => {
-    if(!confirm("Delete this project, all its surveys, observations, animals and stored photos? This cannot be undone.")) return;
-    for(const o of allObs) await DB.del("observations", o.id);
-    for(const ph of await DB.by("photos","projectId",id)) await DB.del("photos", ph.id);
-    if(Track.cur && Track.cur.projectId === id) await Track.end();
-    for(const t of (await allTracks()).filter(t => t.projectId === id)) await DB.del("kv", "track:" + t.id);
-    await DB.del("projects", id); location.hash = "#/";
-  };
+  wireExport(pid);
 }
 
 /* ===================== Observation ===================== */
@@ -1694,7 +1795,7 @@ function speciesOptions(filter, current){
   let html = `<option value="${UNKNOWN}" ${current===UNKNOWN?"selected":""}>${UNKNOWN}</option>`;
   for(const [label, fams] of FAMILY_GROUPS){
     const items = SPECIES.filter(s => fams.includes(s[2]) && match(s));
-    if(items.length) html += `<optgroup label="${esc(label)}">${items.map(s=>`<option value="${esc(s[0])}" ${s[0]===current?"selected":""}>${esc(s[0])}${s[1]?" — "+esc(s[1]):""}</option>`).join("")}</optgroup>`;
+    if(items.length) html += `<optgroup label="${esc(label)}">${items.map(s=>`<option value="${esc(s[0])}" ${s[0]===current?"selected":""}>${esc(s[0])}${s[1]?" — "+esc(s[1]):GENUS_SET.has(s[0])?" — genus known, species not":""}</option>`).join("")}</optgroup>`;
   }
   return html;
 }
@@ -1708,7 +1809,8 @@ async function renderObservation(id){
   const p = await DB.get("projects", o.projectId);
   const sv = surveyOf(p, o);
   if(sv && o.date !== sv.date){ o.date = sv.date; await DB.put("observations", o); }
-  $("#backBtn").onclick = () => location.hash = `#/p/${o.projectId}`;
+  const backHash = sv ? `#/s/${o.projectId}/${sv.id}` : `#/p/${o.projectId}`;
+  $("#backBtn").onclick = () => location.hash = backHash;
   $("#title").textContent = `Obs ${o.no} · ${p?.locality||""}`;
   const photos = await DB.by("photos","obsId",id);
   const otherObs = (await DB.by("observations","projectId",o.projectId)).filter(x => x.id !== o.id);   // for the project tally
@@ -1741,6 +1843,7 @@ async function renderObservation(id){
       <div class="gpsstatus" id="altSrc"></div>
 
       <label for="oCap">Capture type</label>
+      ${sv && sv.type ? `<div class="gpsstatus" style="margin:0 0 4px">Filled in from the survey type (${esc(sv.type)}) — change it here for a one-off.</div>` : ""}
       ${selectHTML("oCap", CAPTURE.concat(o.capture && !CAPTURE.includes(o.capture) ? [o.capture] : []).map(c=>[c,c]), o.capture, "— Select —", false)}
       <div id="devWrap" class="${DEVICE[o.capture] ? "" : "hidden"}">
         <div class="meas">
@@ -1855,9 +1958,9 @@ async function renderObservation(id){
   $("#delObs").onclick = async () => {
     if(!confirm("Delete this observation and its animals/photos?")) return;
     for(const ph of photos) await DB.del("photos", ph.id);
-    await DB.del("observations", id); location.hash = `#/p/${o.projectId}`;
+    await DB.del("observations", id); location.hash = backHash;
   };
-  $("#doneObs").onclick = () => location.hash = `#/p/${o.projectId}`;
+  $("#doneObs").onclick = () => location.hash = backHash;
 
   wireFolderBanner();
   /* ---- Altitude from pin (Copernicus 90 m DEM via Open-Meteo; needs signal) ---- */
@@ -2054,6 +2157,7 @@ async function renderObservation(id){
         <label>Photos (optional)</label>
         <div class="slots">${VIEWS.map(([tag,name]) => `<div class="slot">
           <button class="btn accent" data-act="photo" data-view="${tag}"><span>📷</span><span>${name}</span></button>
+          <button class="btn small slot-add" data-act="photoAdd" data-view="${tag}">🖼 Add from gallery</button>
           <div class="thumbs">${ph.filter(x=>x.view===tag).map(thumb).join("")}</div></div>`).join("")}</div>
         ${other.length ? `<label>Earlier photos (no view recorded)</label><div class="thumbs">${other.map(thumb).join("")}</div>` : ""}
         <label>Notes</label>
@@ -2108,7 +2212,8 @@ async function renderObservation(id){
           if(activeRec){ try{ activeRec.abort(); }catch(e){} activeRec = null; }
           for(const ph of photos.filter(x=>x.animalId===s.id)){ await DB.del("photos", ph.id); photos.splice(photos.indexOf(ph),1); }
           o.animals.splice(+el.dataset.i,1); await save(); renderAnimals();
-        } else if(act==="photo"){ await takePhoto(s, b.dataset.view); }
+        } else if(act==="photo"){ await takePhoto(s, b.dataset.view, false); }
+        else if(act==="photoAdd"){ await takePhoto(s, b.dataset.view, true); }
         else if(act==="dl"){ const ph = photos.find(x=>x.id===b.dataset.ph); downloadBlob(ph.blob, photoName(ph,s)); }
         else if(act==="rmph"){ if(!confirm("Remove this photo from the app?")) return;
           await DB.del("photos", b.dataset.ph); photos.splice(photos.findIndex(x=>x.id===b.dataset.ph),1); renderAnimals(); }
@@ -2116,24 +2221,30 @@ async function renderObservation(id){
     });
     updateFab();
   };
-  const takePhoto = async (s, view) => {
+  // Store photos (camera or gallery) and save them like any other photo. makePh(file, seq) builds the record; nameOf(ph) its file name.
+  const storePhotos = async (files, gallery, existing, makePh, nameOf) => {
     let folderOk = false;
-    if(FS.root){ try{ folderOk = await FS.ready(true); }catch(e){} }
-    const input = $("#photoInput"); input.value = "";
-    input.onchange = async () => {
-      const file = input.files[0]; if(!file) return;
-      const seq = photos.filter(x=>x.animalId===s.id && x.view===view).reduce((m,x)=>Math.max(m,x.seq),0)+1;
-      const ph = { id:uid(), projectId:o.projectId, obsId:o.id, animalId:s.id, view, takenAt:Date.now(), seq, type:file.type||"image/jpeg", blob:file };
-      await DB.put("photos", ph); photos.push(ph); scheduleFolderSave(o.projectId);
-      const name = photoName(ph, s);
-      if(folderOk){
-        try{ await FS.write([projectFolder(p), obsFolder(o)], name, file); toast(`Saved to ${FS.root.name}/${projectFolder(p)}/${obsFolder(o)}`); }
-        catch(e){ toast("Couldn't write to folder — photo kept in app"); }
-      } else if(settings.autoDownload){ downloadBlob(file, name); toast("Photo saved: " + name); }
-      else toast("Photo stored in app: " + name);
-      renderAnimals();
-    };
-    input.click();
+    if(FS.root){ try{ folderOk = await FS.ready(false); }catch(e){} }
+    let seq = existing.reduce((m,x) => Math.max(m, x.seq), 0), last = "";
+    for(const file of files){
+      const ph = makePh(file, ++seq);
+      ph.takenAt = gallery ? (file.lastModified || Date.now()) : Date.now();   // gallery photos keep the time they were taken
+      await DB.put("photos", ph); photos.push(ph);
+      const name = last = nameOf(ph);
+      if(folderOk){ try{ await FS.write([projectFolder(p), obsFolder(o)], name, file); }catch(e){ folderOk = false; } }
+      else if(settings.autoDownload && !gallery) downloadBlob(file, name);   // gallery photos are already on the phone
+    }
+    scheduleFolderSave(o.projectId);
+    if(!files.length) return;
+    toast(files.length > 1 ? `${files.length} photos added` : folderOk ? `Saved to ${FS.root.name}/${projectFolder(p)}/${obsFolder(o)}` : `Photo saved: ${last}`);
+  };
+  const takePhoto = async (s, view, gallery) => {
+    if(FS.root){ try{ await FS.ready(true); }catch(e){} }
+    const files = await choosePhotos(gallery);
+    await storePhotos(files, gallery, photos.filter(x => x.animalId === s.id && x.view === view),
+      (file, seq) => ({ id:uid(), projectId:o.projectId, obsId:o.id, animalId:s.id, view, seq, type:file.type||"image/jpeg", blob:file }),
+      ph => photoName(ph, s));
+    renderAnimals();
   };
   $("#newAnimal").onclick = async () => {
     const s = { id: await newAnimalId(), createdAt: Date.now(), species: UNKNOWN, total:"", svl:"", vtl:"", vtlSrc:"", tailState:"", regen:"", age:"", sex:"", gravid:"", deceased:false, genetic:false, recapture:false, notes:"" };
@@ -2165,7 +2276,17 @@ async function renderObservation(id){
     if(!SpeechRec){ toast("Voice recognition isn't available in this browser — use the keyboard mic in the typing box", 4000); const b = $("#obsText"); if(b){ b.scrollIntoView({block:"center"}); b.focus(); } return; }
     listen(btn, idleHTML, t => { const b = $("#obsText"); if(b) b.value = t; }, applyObserved);
   };
+  const surls = [];
+  const sightingPhoto = async (g, gallery) => {
+    if(FS.root){ try{ await FS.ready(true); }catch(e){} }
+    const files = await choosePhotos(gallery);
+    await storePhotos(files, gallery, photos.filter(x => x.sightingId === g.id),
+      (file, seq) => ({ id:uid(), projectId:o.projectId, obsId:o.id, sightingId:g.id, kind:"sighting", seq, type:file.type||"image/jpeg", blob:file }),
+      ph => sightingPhotoName(ph, o, g));
+    renderSightings();
+  };
   const renderSightings = () => {
+    surls.splice(0).forEach(u => URL.revokeObjectURL(u));
     renderTally();
     const box = $("#sightings"); if(!box) return;
     showObsMsg();
@@ -2182,6 +2303,10 @@ async function renderObservation(id){
         <div class="cnts">${num("count","Seen")}${num("adult","Adult")}${num("subadult","Sub-adult")}${num("neonate","Neonate")}${lizard ? num("gravid","Gravid") : ""}</div>
         <div class="calc" data-sc>${unknownAge ? `Age not recorded for ${unknownAge}.` : ""}</div>
         <label>Notes</label><input data-sf="notes" value="${esc(g.notes)}" placeholder="Optional">
+        <label>Photos (optional)</label>
+        <div class="thumbs">${photos.filter(x => x.sightingId === g.id).sort((a,b) => a.seq - b.seq).map(x => { const u = URL.createObjectURL(x.blob); surls.push(u);
+          return `<div class="thumb"><img src="${u}" alt=""><div class="fn">${esc(sightingPhotoName(x, o, g))}</div><button class="btn small" data-sp="dl" data-ph="${x.id}">Save</button> <button class="btn small danger" data-sp="rm" data-ph="${x.id}">✕</button></div>`; }).join("")}</div>
+        <div class="btns"><button class="btn accent small" data-sa="take">📷 Take photo</button><button class="btn small" data-sa="add">🖼 Add from gallery</button></div>
       </div>`;
     }).join("");
     $$(".sighting", box).forEach(el => {
@@ -2208,7 +2333,18 @@ async function renderObservation(id){
         if(k !== "count" && k !== "gravid" && aged > g.count){ g.count = aged; $('[data-sn="count"]', el).value = g.count; }
         save(); refresh();
       });
-      $('[data-sa="del"]', el).onclick = () => { if(!confirm(`Delete “${describeGroup(g)}”?`)) return; o.sightings.splice(+el.dataset.i, 1); save(); renderSightings(); };
+      $('[data-sa="del"]', el).onclick = async () => {
+        if(!confirm(`Delete “${describeGroup(g)}”?`)) return;
+        for(const ph of photos.filter(x => x.sightingId === g.id)){ await DB.del("photos", ph.id); photos.splice(photos.indexOf(ph), 1); }
+        o.sightings.splice(+el.dataset.i, 1); save(); renderSightings();
+      };
+      $('[data-sa="take"]', el).onclick = () => sightingPhoto(g, false);
+      $('[data-sa="add"]', el).onclick = () => sightingPhoto(g, true);
+      $$("[data-sp]", el).forEach(b => b.onclick = async () => {
+        const ph = photos.find(x => x.id === b.dataset.ph); if(!ph) return;
+        if(b.dataset.sp === "dl") downloadBlob(ph.blob, sightingPhotoName(ph, o, g));
+        else { if(!confirm("Remove this photo from the app?")) return; await DB.del("photos", ph.id); photos.splice(photos.indexOf(ph), 1); renderSightings(); }
+      });
     });
     updateFab();
   };
@@ -2295,13 +2431,13 @@ async function buildWorkbook(projectId, kind){
     sheet = "ARDS records"; name = `ARDS_records_${projectFolder(p)}.xlsx`;
   } else {
     // Full survey data, one row per animal (observations with no animals get one row)
-    header = ["Locality name","Start date","Survey no.","Survey date","Observers","Obs no.","Obs time","Location","Latitude (WGS84)","Longitude (WGS84)",
+    header = ["Locality name","Start date","Survey no.","Survey date","Survey type","Observers","Obs no.","Obs time","Location","Latitude (WGS84)","Longitude (WGS84)",
       "Capture type","Line","ACO / GMT / Pitfall no.","No capture","Habitat (ARDS code)","Weather (ARDS code)","Animal no. (project)","Animal ID","Species","Common name","Species no. (project)",
       "Total length (mm)","SVL (mm)","VTL (mm)","Tail","Regen (mm)","Age class","Sex","Gravid","Photo files","Deceased","Genetic sample","Recapture"];
     rows = [header];
     for(const o of obs){
       const sv = surveyOf(p, o);
-      const base = [p.locality||"", p.date||"", sv ? sv.no : "", sv ? sv.date : (o.date||""), who(sv)[0], o.no, o.time||"", o.location||"", lat(o), lon(o),
+      const base = [p.locality||"", p.date||"", sv ? sv.no : "", sv ? sv.date : (o.date||""), sv ? (sv.type||"") : "", who(sv)[0], o.no, o.time||"", o.location||"", lat(o), lon(o),
         o.capture||"", DEVICE[o.capture] ? (o.line||"") : "", DEVICE[o.capture] ? (o.device||"") : "", DEVICE[o.capture] && o.noCapture ? "Yes" : "", habCode(o), wxCode(o)];
       if(!(o.animals||[]).length && !(o.sightings||[]).length) rows.push([...base, ...Array(header.length - base.length).fill("")]);
       for(const s of o.animals||[]){
@@ -2313,16 +2449,17 @@ async function buildWorkbook(projectId, kind){
     }
     sheet = "Project data"; name = `Project_data_${projectFolder(p)}.xlsx`;
     // Observed (not captured): one row per group
-    const oh = ["Locality name","Start date","Survey no.","Survey date","Observers","Obs no.","Obs time","Location","Latitude (WGS84)","Longitude (WGS84)",
-      "Capture type","Line","ACO / GMT / Pitfall no.","Habitat (ARDS code)","Weather (ARDS code)","Group","Species / animal","Common name","Number observed","Adults","Sub-adults","Neonates","Age not recorded","Gravid","Notes"];
+    const oh = ["Locality name","Start date","Survey no.","Survey date","Survey type","Observers","Obs no.","Obs time","Location","Latitude (WGS84)","Longitude (WGS84)",
+      "Capture type","Line","ACO / GMT / Pitfall no.","Habitat (ARDS code)","Weather (ARDS code)","Group","Species / animal","Common name","Number observed","Adults","Sub-adults","Neonates","Age not recorded","Gravid","Notes","Photo files"];
     const orows = [oh];
     for(const o of obs){
       const sv = surveyOf(p, o);
       for(const g of o.sightings||[]){
         const lizard = g.group !== "Other", n = +g.count||0;
-        orows.push([p.locality||"", p.date||"", sv ? sv.no : "", sv ? sv.date : (o.date||""), who(sv)[0], o.no, o.time||"", o.location||"", lat(o), lon(o),
+        orows.push([p.locality||"", p.date||"", sv ? sv.no : "", sv ? sv.date : (o.date||""), sv ? (sv.type||"") : "", who(sv)[0], o.no, o.time||"", o.location||"", lat(o), lon(o),
           o.capture||"", DEVICE[o.capture] ? (o.line||"") : "", DEVICE[o.capture] ? (o.device||"") : "", habCode(o), wxCode(o), g.group, lizard ? (g.species||UNKNOWN) : (g.name||""), lizard ? commonName(g.species) : "",
-          n, +g.adult||0, +g.subadult||0, +g.neonate||0, Math.max(0, n-(+g.adult||0)-(+g.subadult||0)-(+g.neonate||0)), lizard ? (+g.gravid||0) : "", g.notes||""]);
+          n, +g.adult||0, +g.subadult||0, +g.neonate||0, Math.max(0, n-(+g.adult||0)-(+g.subadult||0)-(+g.neonate||0)), lizard ? (+g.gravid||0) : "", g.notes||"",
+          photos.filter(x => x.kind === "sighting" && x.sightingId === g.id).sort((a,b) => a.seq - b.seq).map(x => sightingPhotoName(x, o, g)).join("; ")]);
       }
     }
     extra.push(["Observed", oh, orows]);
@@ -2367,6 +2504,7 @@ async function exportZip(projectId){
   const files = [];
   for(const ph of photos){
     if(ph.kind === "datasheet"){ const sv = (p.surveys||[]).find(x => x.id === ph.surveyId); if(sv) files.push({ name: `${projectFolder(p)}/${sheetName(ph, sv)}`, blob: ph.blob }); continue; }
+    if(ph.kind === "sighting"){ const o = obs.find(x => x.id === ph.obsId), g = o && (o.sightings||[]).find(x => x.id === ph.sightingId); if(g) files.push({ name: `${projectFolder(p)}/${obsFolder(o)}/${sightingPhotoName(ph, o, g)}`, blob: ph.blob }); continue; }
     const o = obs.find(x=>x.id===ph.obsId); const s = o && (o.animals||[]).find(x=>x.id===ph.animalId); if(!o||!s) continue;
     files.push({ name: `${projectFolder(p)}/${obsFolder(o)}/${photoName(ph,s)}`, blob: ph.blob });
   }
