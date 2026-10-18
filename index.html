@@ -690,7 +690,11 @@ h1,h2,h3,b,strong{font-weight:600}
 .hero img{width:84px;height:84px;border-radius:14px;display:block}
 .hero .name{font-size:22px;line-height:1.2;font-weight:600}
 header.top{position:sticky;top:0;z-index:1000;background:var(--head);color:var(--head-ink);
-  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.trackbar{flex-basis:100%;display:flex;align-items:center;gap:8px;background:#9c3b22;color:#fff;border-radius:8px;padding:6px 6px 6px 10px;font-size:13px;line-height:1.3}
+.trackbar span{flex:1;min-width:0}
+header.top .trackbar button{border-color:#fff;font-weight:700;padding:4px 12px}
+.btn.trk{min-height:54px;font-size:18px}
 header.top h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 header.top button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:6px 10px;font-size:15px}
 main{max-width:760px;margin:0 auto;padding:12px 16px 120px}
@@ -738,6 +742,13 @@ button{font:inherit;cursor:pointer}
 .slot .thumb img{width:100%;height:auto;aspect-ratio:1}
 .slot .thumb .btn{min-height:30px;padding:2px 7px}
 .tally-total{font-size:17px;margin-bottom:8px}
+.tally-total.second{margin-top:16px}
+.sighting{border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;padding:12px;margin:10px 0;background:var(--bg)}
+.sighting .head{display:flex;align-items:center;gap:8px}
+.sighting .head .grow{flex:1;min-width:0}
+.cnts{display:grid;grid-template-columns:repeat(auto-fit,minmax(46px,1fr));gap:6px;align-items:end}
+.cnts label{font-size:12px;margin-top:8px}
+.cnts input{text-align:center;padding:8px 2px}
 .btn.speak{min-height:58px;font-size:19px;padding:10px 22px}
 .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:2500;display:flex;align-items:center;gap:10px;min-height:68px;padding:8px 24px 8px 18px;border-radius:999px;border:0;background:var(--brand);color:var(--brand-ink);font-size:19px;font-weight:700;text-align:left;line-height:1.15;box-shadow:0 4px 16px rgba(0,0,0,.35)}
 .fab .mic{font-size:28px}
@@ -764,7 +775,9 @@ body.has-fab .toast{bottom:calc(100px + env(safe-area-inset-bottom))}
 .banner{background:#fff4e0;color:#5a3a08;border:1px solid #e9c58a;border-radius:10px;padding:10px;font-size:14px;margin:10px 0}
 @media (prefers-color-scheme: dark){.banner{background:#3a2c14;color:#f3dcb5;border-color:#6b5226}}
 .observer-box{background:var(--soft);border-radius:10px;padding:10px;margin-top:8px;font-size:14px}
-.checks{display:flex;gap:10px}
+.checks{display:flex;gap:10px;flex-wrap:wrap}
+.checks .chk{flex:1 1 128px;min-width:0}
+.chk input{flex:none}
 .chk{display:flex;align-items:center;gap:8px;flex:1;margin:0;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:15px}
 .chk input{width:22px;height:22px;min-height:auto;margin:0}
 .voice{background:var(--soft);border-radius:10px;padding:4px 10px 10px;margin-top:8px}
@@ -780,6 +793,7 @@ body.has-fab .toast{bottom:calc(100px + env(safe-area-inset-bottom))}
 <header class="top">
   <button id="backBtn" class="hidden" aria-label="Back">‹ Back</button>
   <h1 id="title">Lizard Field Recorder</h1>
+  <div id="trackBar" class="trackbar hidden"><span data-tb></span><button id="trackEnd" type="button">END</button></div>
 </header>
 <main id="app"></main>
 <div id="toast" class="toast"></div>
@@ -821,7 +835,38 @@ const MICRO = [["A","Foliage"],["B","Trunk"],["C","Branches"],["D","Under stones
 const LIGHT = [["1","Fine/Sunny"],["2","Part cloudy"],["3","Overcast"],["4","Showers"],["5","Rain"],["6","Night"],["7","0–½ Moonlit"],["8","½–1 Moonlit"]];
 const TEMP = [["1","Hot"],["2","Warm"],["3","Moderate"],["4","Cool"],["5","Cold"]];
 const WIND = [["1","Calm"],["2","Light breeze"],["3","Mod breeze"],["4","Gusty"],["5","Strong winds"]];
-const CAPTURE = ["GMT","ACO","Pitfall","Spotlighting","MHS","Supervised Clearance"];
+const CAPTURE = ["G Minnow Trap","Artificial Cover Object","Pitfall","Spotlighting","Manual Habitat Search","Supervised Clearance"];
+const DEVICE = {"Artificial Cover Object":"ACO", "G Minnow Trap":"GMT", "Pitfall":"Pitfall"};   // capture types that are laid out in numbered lines
+// How many devices are on each line, remembered per project: p.lines[captureType][line] = count
+function lineLen(p, cap, line){ const l = String(line ?? "").trim(); return l ? (((p && p.lines) || {})[cap] || {})[l] || "" : ""; }
+function setLineLen(p, cap, line, n, byHand){
+  const l = String(line ?? "").trim(); if(!p || !l) return;
+  p.lines = p.lines || {}; p.lines[cap] = p.lines[cap] || {}; if(n) p.lines[cap][l] = n; else delete p.lines[cap][l];
+  if(byHand !== undefined){ p.lineSet = p.lineSet || {}; p.lineSet[cap] = p.lineSet[cap] || {}; if(byHand && n) p.lineSet[cap][l] = true; else delete p.lineSet[cap][l]; }
+}
+// true once the size has been typed into the "ACOs on line" box (a size learnt from numbers entered is only the highest seen so far)
+// Line size = the larger of the remembered size and the highest number saved on that line in this project
+function lineSize(p, obsList, cap, line){
+  const l = String(line ?? "").trim(); if(!l) return null;
+  let n = numOrNull(lineLen(p, cap, l)) || 0;
+  for(const x of obsList) if(x.capture === cap && String(x.line ?? "").trim() === l){ const d = numOrNull(x.device); if(d && d > n) n = d; }
+  return n || null;
+}
+function lineFixed(p, cap, line){ const l = String(line ?? "").trim(); return !!(((p && p.lineSet) || {})[cap] || {})[l]; }
+// The device checked so far on this line in this survey, in order. Starting at 1 counts up; starting anywhere else counts down.
+function lineRun(obsList, o){
+  const cap = o.capture, line = String(o.line ?? "").trim();
+  return obsList.filter(x => x.id !== o.id && x.surveyId === o.surveyId && x.capture === cap && String(x.line ?? "").trim() === line && numOrNull(x.device) != null && (x.no||0) < (o.no||Infinity))
+    .sort((a,b) => a.no - b.no).map(x => numOrNull(x.device));
+}
+function nextDevice(p, obsList, o){
+  if(!DEVICE[o.capture] || !String(o.line ?? "").trim()) return {n:"", dir:""};
+  const run = lineRun(obsList, o); if(!run.length) return {n:"", dir:""};
+  const up = run[0] === 1, last = run[run.length-1], len = numOrNull(lineLen(p, o.capture, o.line));
+  const n = up ? last + 1 : last - 1;
+  if(n < 1 || (up && len && lineFixed(p, o.capture, o.line) && n > len)) return {n:"", dir: up ? "up" : "down", end:true};
+  return {n: String(n), dir: up ? "up" : "down"};
+}
 const SEX = ["Male","Female"];
 const AGE = ["Adult","Sub-adult","Neonate"];
 const VIEWS = [["DOR","Dorsal"],["LAT","Lateral"],["VEN","Ventral"],["EAR","Ear hole"]];
@@ -935,6 +980,7 @@ function parseVoice(raw){
   // Sex / age
   take(/\b(?:deceased|dead)\b/, () => r.deceased = true);
   take(/\b(?:genetic|tissue|dna)(?:\s+sample)?(?:\s+(?:taken|yes))?\b/, () => r.genetic = true);
+  take(/\b(?:re\s*captured?|recap)\b/, () => r.recapture = true);
   take(/\bfemale\b/, () => r.sex = "Female");
   take(/\bmale\b/, () => r.sex = "Male");
   take(/\bsub\s*adult\b/, () => r.age = "Sub-adult");
@@ -945,7 +991,7 @@ function parseVoice(raw){
   if(sp) r.species = sp.sci;
   return r;
 }
-const VOICE_LABELS = {species:"Species", total:"Total length", svl:"SVL", vtl:"VTL", tailState:"Tail", regen:"Regen", age:"Age class", sex:"Sex", gravid:"Gravid", deceased:"Deceased", genetic:"Genetic sample"};
+const VOICE_LABELS = {species:"Species", total:"Total length", svl:"SVL", vtl:"VTL", tailState:"Tail", regen:"Regen", age:"Age class", sex:"Sex", gravid:"Gravid", deceased:"Deceased", genetic:"Genetic sample", recapture:"Recapture"};
 function describeParse(r){ return Object.keys(VOICE_LABELS).filter(k => r[k]!==undefined).map(k => `${VOICE_LABELS[k]}: ${r[k]===true?"Yes":r[k]}${["total","svl","vtl","regen"].includes(k)?" mm":""}`).join(" · "); }
 
 /* ===================== IndexedDB ===================== */
@@ -1057,14 +1103,213 @@ function projectTally(obsList){
   all.sort((x,y) => x.t - y.t || x.no - y.no || x.i - y.i);
   const bySpecies = new Map(), numbers = new Map();
   all.forEach((x,k) => { const sp = x.a.species || UNKNOWN, n = (bySpecies.get(sp)||0) + 1; bySpecies.set(sp, n); numbers.set(x.a.id, {n:k+1, sp:n}); });
-  return {total: all.length, dead: all.filter(x => x.a.deceased).length, bySpecies, numbers};
+  const obsBy = new Map(); let observed = 0;
+  for(const o of obsList) for(const g of o.sightings||[]){ const n = +g.count || 0; if(!n) continue; observed += n; const k = sightingLabel(g); obsBy.set(k, (obsBy.get(k)||0) + n); }
+  return {total: all.length, dead: all.filter(x => x.a.deceased).length, recap: all.filter(x => x.a.recapture).length, bySpecies, numbers, observed, obsBy};
 }
 function speciesLabel(sci){ return commonName(sci) || sci || UNKNOWN; }
+/* ---- Observed (not captured) groups, e.g. "2 skinks, unknown species, 1 neonate 1 adult. 3 mice" ---- */
+const OBS_GROUPS = ["Skink", "Gecko", "Other"];
+const GROUP_FAMILY = {Skink:"Scincidae", Gecko:"Diplodactylidae"};
+const OBS_STOP = new Set(["unknown","species","sp","spp","and","with","of","which","were","was","are","is","the","x","seen","observed","also","plus","then","there","some","more","another"]);
+function obsAttr(w){
+  if(/^adults?$/.test(w)) return "adult";
+  if(/^(?:subadults?|juveniles?|juvs?)$/.test(w)) return "subadult";   // juvenile isn't a class any more: counted as sub-adult
+  if(/^(?:neonates?|hatchlings?|babies|baby)$/.test(w)) return "neonate";
+  if(/^(?:gravid|pregnant)$/.test(w)) return "gravid";
+  if(/^(?:males?|females?)$/.test(w)) return "sex";
+  return null;
+}
+function parseObserved(raw){
+  let t = stripMacrons(String(raw||"").toLowerCase()).replace(/[’'`]/g,"").replace(/\.(?!\d)/g," ").replace(/[,;:!?()\[\]\n\r\/&+]/g," ").replace(/-/g," ").replace(/\s+/g," ").trim();
+  t = wordsToNumbers(t).replace(/\bsub\s+adult/g, "subadult").replace(/\b(?:a|an)\b/g, "1");
+  const toks = t.split(" ").filter(Boolean), groups = [], isNum = w => /^\d+$/.test(w);
+  let cur = null;
+  const start = n => (cur = {count:n, words:[], adult:0, subadult:0, neonate:0, gravid:0, notes:[]}, groups.push(cur), cur);
+  const apply = (g, w, n) => { const k = obsAttr(w); if(k === "sex") g.notes.push(`${n} ${w}`); else g[k] += n; };
+  for(let i = 0; i < toks.length;){
+    const w = toks[i];
+    if(isNum(w)){
+      const n = +w; let j = i + 1; const attrs = [];
+      while(j < toks.length && obsAttr(toks[j])) attrs.push(toks[j++]);
+      const next = toks[j], nounish = next && !isNum(next) && !OBS_STOP.has(next);
+      if(nounish || !cur) start(n);              // "2 skinks", "1 gravid gecko", or a bare number to begin with
+      attrs.forEach(a => apply(cur, a, n));      // "1 neonate", "2 adults", "1 gravid"
+      i = j;
+    } else if(obsAttr(w)){                       // bare word: "adult", "gravid"
+      if(!cur) start(1);
+      const k = obsAttr(w);
+      if(k === "sex") cur.notes.push(w);
+      else if(k === "gravid") cur.gravid = Math.max(cur.gravid, 1);
+      else if(!cur.adult && !cur.subadult && !cur.neonate) cur[k] = cur.count;
+      i++;
+    } else {
+      if(!cur) start(1);
+      cur.words.push(w); i++;
+    }
+  }
+  return groups.filter(g => g.words.length || g.adult || g.subadult || g.neonate).map(g => {
+    const text = g.words.join(" ");
+    let group = /\bskinks?\b/.test(text) ? "Skink" : /\bgeck(?:o|os|oes)\b/.test(text) ? "Gecko" : "Other";
+    let species = group === "Other" ? "" : UNKNOWN;
+    const m = text && matchSpecies(text);
+    if(m && m.sci !== UNKNOWN){
+      const fam = (SPECIES.find(x => x[0] === m.sci) || [])[2];
+      if(fam === "Scincidae") group = "Skink"; else if(fam === "Diplodactylidae") group = "Gecko";
+      species = group === "Other" ? "" : m.sci;
+      if(group === "Other") g.words = [speciesLabel(m.sci)];
+    }
+    const name = group === "Other" ? g.words.filter(w => !OBS_STOP.has(w)).join(" ") : "";
+    const aged = g.adult + g.subadult + g.neonate;
+    return { group, species, name, count: Math.max(g.count, aged), adult:g.adult, subadult:g.subadult, neonate:g.neonate, gravid: group === "Other" ? 0 : g.gravid, notes: g.notes.join(", ") };
+  });
+}
+function sightingLabel(g){
+  if(g.group === "Other") return g.name || "Other";
+  return g.species && g.species !== UNKNOWN ? speciesLabel(g.species) : `${g.group} (unknown species)`;
+}
+function groupSpeciesOptions(group, current){
+  const fam = GROUP_FAMILY[group];
+  return `<option value="${UNKNOWN}" ${!current||current===UNKNOWN?"selected":""}>${UNKNOWN}</option>` +
+    SPECIES.filter(x => x[2] === fam).map(x => `<option value="${esc(x[0])}" ${x[0]===current?"selected":""}>${esc(x[1] ? x[1]+" — "+x[0] : x[0])}</option>`).join("");
+}
 function tallyHTML(t){
-  if(!t.total) return `<p class="muted">No animals recorded yet.</p>`;
+  if(!t.total && !t.observed) return `<p class="muted">No animals recorded yet.</p>`;
   const rows = [...t.bySpecies].sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  return `<div class="tally-total">Total animals: <b>${t.total}</b>${t.dead ? ` <span class="muted">(${t.dead} deceased)</span>` : ""}</div>` + rows.map(([sp,n]) =>
+  let h = `<div class="tally-total">Captured animals: <b>${t.total}</b>${(t.recap || t.dead) ? ` <span class="muted">(${[t.recap && `${t.recap} recapture${t.recap>1?"s":""}`, t.dead && `${t.dead} deceased`].filter(Boolean).join(", ")})</span>` : ""}</div>` + rows.map(([sp,n]) =>
     `<div class="tally-row"><span class="grow">${esc(speciesLabel(sp))}${commonName(sp)?` <span class="muted"><i>${esc(sp)}</i></span>`:""}</span><span class="n">${n}</span></div>`).join("");
+  if(t.observed){
+    const orows = [...t.obsBy].sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    h += `<div class="tally-total second">Observed (not captured): <b>${t.observed}</b></div>` + orows.map(([k,n]) =>
+      `<div class="tally-row"><span class="grow">${esc(k)}</span><span class="n">${n}</span></div>`).join("");
+  }
+  return h;
+}
+
+/* ===================== Spotlight GPS track (START / END, saved as GeoJSON) ===================== */
+// A track belongs to a survey and keeps recording while you move between pages. Stored in the "kv" store as "track:<id>".
+function hav(a, b){ const R = 6371000, r = Math.PI/180, dLat = (b[1]-a[1])*r, dLon = (b[0]-a[0])*r;
+  const s = Math.sin(dLat/2)**2 + Math.cos(a[1]*r)*Math.cos(b[1]*r)*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
+function trackLength(t){ let d = 0; for(let i = 1; i < t.points.length; i++) d += hav(t.points[i-1], t.points[i]); return d; }
+function fmtDist(m){ return m >= 1000 ? (m/1000).toFixed(2) + " km" : Math.round(m) + " m"; }
+function fmtDur(ms){ const s = Math.max(0, Math.round(ms/1000)); return `${Math.floor(s/3600)}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}`; }
+function hhmm(ts){ const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+async function allTracks(){ return (await DB.all("kv")).filter(v => v && v.type === "track"); }
+async function surveyTracks(surveyId){ return (await allTracks()).filter(t => t.surveyId === surveyId).sort((a,b) => a.startedAt - b.startedAt); }
+function trackFileName(p, t, n){
+  const sv = ((p && p.surveys) || []).find(s => s.id === t.surveyId) || {};
+  return `${(sv.date||"").replace(/-/g,"")}_Survey${pad(sv.no||0)}_Spotlight_track_${n}.geojson`;
+}
+async function trackGeoJSON(p, t){
+  const sv = (p.surveys||[]).find(s => s.id === t.surveyId) || {};
+  const coords = t.points.map(q => [+q[0].toFixed(7), +q[1].toFixed(7)]);
+  const feats = [{ type:"Feature",
+    properties:{ name:`Spotlight track — ${p.locality||""}, Survey ${sv.no ?? ""}`, kind:"track", locality:p.locality||"", survey_no:sv.no ?? null, survey_date:sv.date||"",
+      start:new Date(t.startedAt).toISOString(), end:t.endedAt ? new Date(t.endedAt).toISOString() : null,
+      length_m:Math.round(trackLength(t)), points:t.points.length, coordTimes:t.points.map(q => new Date(q[3]).toISOString()), accuracy_m:t.points.map(q => q[4]) },
+    geometry: coords.length > 1 ? {type:"LineString", coordinates:coords} : coords.length ? {type:"Point", coordinates:coords[0]} : null }];
+  // Spotlighting observations from the same survey, as points
+  const obs = (await DB.by("observations","projectId",p.id)).filter(o => o.surveyId === t.surveyId && o.capture === "Spotlighting" && o.lat != null).sort((a,b) => a.no - b.no);
+  for(const o of obs) feats.push({ type:"Feature",
+    properties:{ name:`Obs ${o.no}`, kind:"observation", obs_no:o.no, time:o.time||"", location:o.location||"",
+      captured:(o.animals||[]).length, observed:(o.sightings||[]).reduce((n,g) => n + (+g.count||0), 0),
+      species:[...new Set((o.animals||[]).map(a => speciesLabel(a.species)).concat((o.sightings||[]).map(sightingLabel)))].join("; ") },
+    geometry:{type:"Point", coordinates:[+o.lon.toFixed(7), +o.lat.toFixed(7)]} });
+  return new Blob([JSON.stringify({type:"FeatureCollection", features:feats}, null, 1)], {type:"application/geo+json"});
+}
+async function exportTrack(t, auto){
+  const p = await DB.get("projects", t.projectId); if(!p) return;
+  const n = (await surveyTracks(t.surveyId)).findIndex(x => x.id === t.id) + 1;
+  const name = trackFileName(p, t, n), blob = await trackGeoJSON(p, t);
+  if(!auto){ downloadBlob(blob, name); return; }
+  if(FS.root && await FS.ready(false)){ try{ await FS.write([projectFolder(p)], name, blob); toast(`Track saved: ${name}`, 3500); return; }catch(e){} }
+  if(settings.autoDownload){ downloadBlob(blob, name); toast(`Track saved to Downloads: ${name}`, 3500); return; }
+  toast("Track kept in the app — download it from the Survey section", 3500);
+}
+const Track = {
+  cur:null, watch:null, wake:null, timer:null, dirty:false, lastSave:0, acc:null, err:"",
+  async load(){
+    const id = await DB.get("kv", "activeTrack"); if(!id) return;
+    const t = await DB.get("kv", "track:" + id);
+    if(t && !t.endedAt){ this.cur = t; this.resume(); toast("Spotlight track still recording — carried on", 3500); }
+    else await DB.del("kv", "activeTrack");
+  },
+  async start(p, sv){
+    if(!navigator.geolocation){ toast("GPS isn't available on this device"); return false; }
+    if(this.cur){ toast("A track is already recording — END it first"); return false; }
+    this.cur = { type:"track", id:uid(), projectId:p.id, surveyId:sv.id, startedAt:Date.now(), endedAt:null, points:[] };
+    this.acc = null; this.err = "";
+    await this.save(); await DB.put("kv", this.cur.id, "activeTrack");
+    this.resume(); toast("Spotlight track started"); return true;
+  },
+  resume(){
+    this.watch = navigator.geolocation.watchPosition(pos => this.add(pos), err => { this.err = err.message; this.bar(); },
+      {enableHighAccuracy:true, maximumAge:0, timeout:60000});
+    this.lock();
+    if(!this._vis){ this._vis = () => { if(document.visibilityState === "visible" && this.cur) this.lock(); }; document.addEventListener("visibilitychange", this._vis); }
+    clearInterval(this.timer);
+    this.timer = setInterval(() => { this.bar(); if(this.dirty && Date.now() - this.lastSave > 10000) this.save(); }, 1000);
+    this.bar();
+  },
+  add(pos){
+    const t = this.cur; if(!t) return;
+    const c = pos.coords; this.err = ""; this.acc = c.accuracy;
+    if(c.accuracy > 50){ this.bar(); return; }            // too rough to be useful
+    const q = [c.longitude, c.latitude, c.altitude ?? null, pos.timestamp || Date.now(), Math.round(c.accuracy)];
+    const last = t.points[t.points.length-1];
+    if(last && hav(last, q) < 4 && q[3] - last[3] < 30000) return;   // standing still: one point every 30 s
+    t.points.push(q); this.dirty = true; this.bar();
+  },
+  async save(){ if(!this.cur) return; this.dirty = false; this.lastSave = Date.now(); await DB.put("kv", this.cur, "track:" + this.cur.id); },
+  async lock(){ try{ if("wakeLock" in navigator && document.visibilityState === "visible") this.wake = await navigator.wakeLock.request("screen"); }catch(e){} },
+  async end(){
+    const t = this.cur; if(!t) return null;
+    if(this.watch !== null) navigator.geolocation.clearWatch(this.watch);
+    this.watch = null; clearInterval(this.timer);
+    try{ if(this.wake) await this.wake.release(); }catch(e){} this.wake = null;
+    t.endedAt = Date.now(); await this.save(); await DB.del("kv", "activeTrack");
+    this.cur = null; this.bar();
+    await exportTrack(t, true);
+    return t;
+  },
+  bar(){
+    const el = $("#trackBar"); if(!el) return;
+    if(!this.cur){ el.classList.add("hidden"); return; }
+    el.classList.remove("hidden");
+    const t = this.cur, gps = this.err ? ` · GPS: ${this.err}` : this.acc == null ? " · waiting for GPS…" : this.acc > 50 ? ` · weak GPS ±${Math.round(this.acc)} m` : "";
+    $("[data-tb]", el).textContent = `● Spotlight track · ${fmtDist(trackLength(t))} · ${fmtDur(Date.now() - t.startedAt)} · ${t.points.length} pts${gps}`;
+  }
+};
+// START / END box used on the Survey section and on spotlighting observations
+async function trackBoxHTML(p, sv){
+  const rec = Track.cur, mine = rec && rec.surveyId === sv.id;
+  const done = (await surveyTracks(sv.id)).filter(t => t.endedAt);
+  let h = `<label>Spotlight track</label>`;
+  if(rec && !mine) h += `<p class="muted">A track is recording for another survey — END it from the bar at the top first.</p>`;
+  else if(mine) h += `<button class="btn danger block trk" data-trk="end">■ END track</button>
+      <p class="muted">Recording. Distance and time are in the bar at the top. Keep the app open and the screen on — phones stop GPS when the screen locks or the app goes to the background.</p>`;
+  else h += `<button class="btn primary block trk" data-trk="start">▶ START track</button>
+      <p class="muted">Records the route you walk and saves it as a GeoJSON file when you tap END. Keep the app open and the screen on while walking.</p>`;
+  done.forEach((t,i) => { h += `<div class="list-item" style="cursor:default"><div class="grow"><div class="title">Track ${i+1} · ${hhmm(t.startedAt)}–${hhmm(t.endedAt)}</div>
+      <div class="sub">${fmtDist(trackLength(t))} · ${fmtDur(t.endedAt - t.startedAt)} · ${t.points.length} points</div></div>
+      <button class="btn small" data-trk="dl" data-id="${t.id}">GeoJSON</button><button class="btn small danger" data-trk="del" data-id="${t.id}">✕</button></div>`; });
+  return h;
+}
+function mountTrackBox(p, sv){
+  const draw = async () => {
+    const box = $("#trackBox"); if(!box) return;
+    box.innerHTML = await trackBoxHTML(p, sv);
+    $$("[data-trk]", box).forEach(b => b.onclick = async () => {
+      const a = b.dataset.trk;
+      if(a === "start") await Track.start(p, sv);
+      else if(a === "end"){ if(!confirm("End the spotlight track?")) return; await Track.end(); }
+      else if(a === "dl"){ const t = await DB.get("kv", "track:" + b.dataset.id); if(t) await exportTrack(t, false); return; }
+      else if(a === "del"){ if(!confirm("Delete this track from the app?")) return; await DB.del("kv", "track:" + b.dataset.id); }
+      draw();
+    });
+  };
+  window.redrawTrackBox = draw; onLeave(() => { if(window.redrawTrackBox === draw) window.redrawTrackBox = null; });
+  return draw();
 }
 
 /* ===================== Router ===================== */
@@ -1182,6 +1427,10 @@ async function saveProjectToFolder(projectId, withPhotos){
         const o = obs.find(x=>x.id===ph.obsId); const an = o && (o.animals||[]).find(x=>x.id===ph.animalId); if(!o||!an) continue;
         await FS.write([projectFolder(p), obsFolder(o)], photoName(ph, an), ph.blob);
       }
+      for(const t of (await allTracks()).filter(t => t.projectId === projectId && t.endedAt)){
+        const n = (await surveyTracks(t.surveyId)).findIndex(x => x.id === t.id) + 1;
+        await FS.write([projectFolder(p)], trackFileName(p, t, n), await trackGeoJSON(p, t));
+      }
     }
     await FS.write([], "lizard-ards-backup.json", await backupBlob());
     folderErrShown = false;
@@ -1205,7 +1454,7 @@ async function folderBanner(){
 function wireFolderBanner(){ const b = $("#reconnTop"); if(b) b.onclick = async () => { if(await FS.ready(true)){ toast("Folder reconnected"); route(); } }; }
 
 /* ===================== Surveys (one per day of field work, inside a project) ===================== */
-const CAPTURE_OLD = {"GMinnow":"GMT", "Manual habitat search":"MHS", "Supervised habitat clearance":"Supervised Clearance"};
+const CAPTURE_OLD = {"GMinnow":"G Minnow Trap", "GMT":"G Minnow Trap", "ACO":"Artificial Cover Object", "MHS":"Manual Habitat Search", "Manual habitat search":"Manual Habitat Search", "Supervised habitat clearance":"Supervised Clearance"};
 function newSurvey(p, date, observerIds){
   if(!Array.isArray(p.surveys)) p.surveys = [];
   const s = { id:uid(), no:p.surveys.reduce((m,x)=>Math.max(m,x.no),0)+1, date, observerIds:[...(observerIds||[])] };
@@ -1250,6 +1499,8 @@ async function renderProject(id){
   const chosen = sv.observerIds.map(i => observers.find(o => o.id === i)).filter(Boolean);
   const nObs = s => allObs.filter(o => o.surveyId === s.id).length;
   const projPhotos = await DB.by("photos","projectId",id);
+  // Spotlight track box: shown once the project uses spotlighting, or this survey has a track
+  const showTrackBox = allObs.some(o => o.capture === "Spotlighting") || (Track.cur && Track.cur.surveyId === sv.id) || (await surveyTracks(sv.id)).length > 0;
   const sheets = projPhotos.filter(x => x.kind === "datasheet" && x.surveyId === sv.id).sort((a,b)=>a.seq-b.seq);
   const sheetUrls = sheets.map(x => URL.createObjectURL(x.blob)); onLeave(() => sheetUrls.forEach(u => URL.revokeObjectURL(u)));
   const app = $("#app");
@@ -1283,6 +1534,7 @@ async function renderProject(id){
       </select>
       <div class="btns"><button class="btn small" id="addUser">＋ Add user</button>
         ${surveys.length>1 ? `<button class="btn small danger" id="delSurvey" style="margin-left:auto">Delete this survey</button>` : ""}</div>
+      ${showTrackBox ? `<div id="trackBox" class="subpanel"></div>` : ""}
       <label>Data sheet photos</label>
       <p class="muted" style="margin:0">Photograph the paper data sheet for this survey. Saved next to the Excel file.</p>
       <div class="thumbs sheets">${sheets.map((x,i) => `<div class="thumb"><img src="${sheetUrls[i]}" alt="Data sheet ${x.seq}"><div class="fn">${esc(sheetName(x, sv))}</div><button class="btn small" data-sh="dl" data-ph="${x.id}">Save</button> <button class="btn small danger" data-sh="rm" data-ph="${x.id}">✕</button></div>`).join("")}</div>
@@ -1303,7 +1555,7 @@ async function renderProject(id){
       <div id="obsList">${obs.length ? obs.map(o => `
         <div class="list-item" data-id="${o.id}"><div class="grow">
           <div class="title">Obs ${o.no} · ${esc(o.time||"")} ${o.location?"· "+esc(o.location):""}</div>
-          <div class="sub">${(o.animals||[]).length} animal${(o.animals||[]).length===1?"":"s"}${o.capture?" · "+esc(o.capture):""}${o.lat!=null?` · ${o.lat.toFixed(5)}, ${o.lon.toFixed(5)}`:" · no GPS"}</div>
+          <div class="sub">${[(o.animals||[]).length ? `${(o.animals||[]).length} captured` : "", (o.sightings||[]).length ? `${(o.sightings||[]).reduce((n,g)=>n+(+g.count||0),0)} observed` : ""].filter(Boolean).join(" · ") || (DEVICE[o.capture] && o.noCapture ? "no capture" : "no animals yet")}${DEVICE[o.capture] ? ` · ${DEVICE[o.capture]}${String(o.line||"").trim() ? ` line ${esc(o.line)}` : ""}${String(o.device||"").trim() ? ` #${esc(o.device)}` : ""}` : o.capture ? " · "+esc(o.capture) : ""}${o.lat!=null?` · ${o.lat.toFixed(5)}, ${o.lon.toFixed(5)}`:" · no GPS"}</div>
           <div>${[...new Set((o.animals||[]).map(s=>s.species))].map(s=>`<span class="pill">${esc(s)}</span>`).join("")}</div>
         </div><span class="chev">›</span></div>`).join("") : `<p class="muted">No observations in this survey yet.</p>`}</div>
     </div>
@@ -1396,10 +1648,13 @@ async function renderProject(id){
     if(b.dataset.sh === "dl") downloadBlob(ph.blob, sheetName(ph, sv));
     else { if(!confirm("Remove this data sheet photo from the app?")) return; await DB.del("photos", ph.id); renderProject(id); }
   });
+  if(showTrackBox) mountTrackBox(p, sv);
   const ds = $("#delSurvey"); if(ds) ds.onclick = async () => {
     if(!confirm(obs.length ? `Delete Survey ${sv.no} with its ${obs.length} observation${obs.length===1?"":"s"}, their animals and stored photos? This cannot be undone.` : `Delete Survey ${sv.no}?`)) return;
     for(const o of obs){ for(const ph of await DB.by("photos","obsId",o.id)) await DB.del("photos", ph.id); await DB.del("observations", o.id); }
     for(const ph of sheets) await DB.del("photos", ph.id);
+    if(Track.cur && Track.cur.surveyId === sv.id) await Track.end();
+    for(const t of await surveyTracks(sv.id)) await DB.del("kv", "track:" + t.id);
     p.surveys = p.surveys.filter(s => s.id !== sv.id); delete p.curSurvey;
     await save(); renderProject(id);
   };
@@ -1408,7 +1663,11 @@ async function renderProject(id){
     const prev = allObs[allObs.length-1];   // latest observation in the project: its settings carry over
     const o = { id:uid(), projectId:id, surveyId:sv.id, no:(prev?prev.no:0)+1, date:sv.date, time:nowHM(), location:"", alt:"", lat:null, lon:null, acc:null, gpsMethod:"",
       capture: prev?.capture||"", major: prev?.major||"", majorOther: prev?.majorOther||"", micro: prev?.micro||"", microOther: prev?.microOther||"",
-      light: prev?.light||"", temp: prev?.temp||"", wind: prev?.wind||"", animals:[], createdAt:Date.now() };
+      light: prev?.light||"", temp: prev?.temp||"", wind: prev?.wind||"", animals:[], sightings:[],
+      captured: prev ? prev.captured !== false : true, observed: !!(prev && prev.observed), createdAt:Date.now() };
+    if(prev && DEVICE[prev.capture] && prev.capture === o.capture){   // same line, next ACO / GMT number
+      o.line = prev.line || ""; const nx = nextDevice(p, allObs, o); o.device = nx.n; o.devAuto = true;
+    }
     await DB.put("observations", o); location.hash = `#/o/${o.id}`;
   };
   $$("#obsList .list-item").forEach(el => el.onclick = () => location.hash = `#/o/${el.dataset.id}`);
@@ -1419,6 +1678,8 @@ async function renderProject(id){
     if(!confirm("Delete this project, all its surveys, observations, animals and stored photos? This cannot be undone.")) return;
     for(const o of allObs) await DB.del("observations", o.id);
     for(const ph of await DB.by("photos","projectId",id)) await DB.del("photos", ph.id);
+    if(Track.cur && Track.cur.projectId === id) await Track.end();
+    for(const t of (await allTracks()).filter(t => t.projectId === id)) await DB.del("kv", "track:" + t.id);
     await DB.del("projects", id); location.hash = "#/";
   };
 }
@@ -1452,6 +1713,9 @@ async function renderObservation(id){
   const photos = await DB.by("photos","obsId",id);
   const otherObs = (await DB.by("observations","projectId",o.projectId)).filter(x => x.id !== o.id);   // for the project tally
   if(!o.animals) o.animals = [];
+  if(!o.sightings) o.sightings = [];
+  if(o.captured === undefined) o.captured = true;   // observations made before the Captured/Observed tick boxes
+  o.observed = !!o.observed;
   const urls = [];
   const app = $("#app");
   const save = async () => { await DB.put("observations", o); scheduleFolderSave(o.projectId); };
@@ -1478,6 +1742,16 @@ async function renderObservation(id){
 
       <label for="oCap">Capture type</label>
       ${selectHTML("oCap", CAPTURE.concat(o.capture && !CAPTURE.includes(o.capture) ? [o.capture] : []).map(c=>[c,c]), o.capture, "— Select —", false)}
+      <div id="devWrap" class="${DEVICE[o.capture] ? "" : "hidden"}">
+        <div class="meas">
+          <div><label for="oLine">Line</label><input id="oLine" inputmode="numeric" value="${esc(o.line)}"></div>
+          <div><label for="oDev"><span data-dev>${DEVICE[o.capture]||"ACO"}</span> number</label><input id="oDev" inputmode="numeric" value="${esc(o.device)}"></div>
+          <div><label for="oLineLen"><span data-dev>${DEVICE[o.capture]||"ACO"}</span>s on line</label><input id="oLineLen" inputmode="numeric" value="${esc(lineLen(p, o.capture, o.line))}"></div>
+        </div>
+        <div class="gpsstatus" id="devHint"></div>
+        <div class="checks" style="margin-top:8px"><label class="chk"><input type="checkbox" id="oNoCap" ${o.noCapture?"checked":""}> No capture</label></div>
+      </div>
+      <div id="spotWrap" class="subpanel ${o.capture === "Spotlighting" && sv ? "" : "hidden"}"><div id="trackBox"></div></div>
       <label for="oLoc">Location</label>
       <input id="oLoc" value="${esc(o.location)}" placeholder="e.g. ACO line 2, cover #14">
 
@@ -1497,10 +1771,29 @@ async function renderObservation(id){
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="animalsCard">
       <h2>Animals</h2>
-      <div id="animals"></div>
-      <button class="btn primary block" id="newAnimal">＋ New animal</button>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="mCap" ${o.captured?"checked":""}> Captured</label>
+        <label class="chk"><input type="checkbox" id="mObs" ${o.observed?"checked":""}> Observed</label>
+      </div>
+      <p class="muted hidden" id="modeHint">Tick Captured, Observed, or both.</p>
+      <div id="capWrap">
+        <h3>Captured</h3>
+        <div id="animals"></div>
+        <button class="btn primary block" id="newAnimal">＋ New animal</button>
+      </div>
+      <div id="obsWrap">
+        <h3>Observed (not captured)</h3>
+        <div class="voice" id="obsQuick">
+          <div class="btns" style="margin-top:6px"><button class="btn primary speak" id="obsSpeak">🎤 Speak</button>
+            <span class="muted" style="align-self:center">Say or type what you saw, starting each group with a number, e.g. “2 skinks, unknown species, 1 neonate 1 adult. 2 geckos, unknown species, 2 adults, 1 gravid. 3 mice”</span></div>
+          <div class="vrow"><input id="obsText" placeholder="…or type / keyboard-dictate here"><button class="btn small" id="obsApply">Add</button></div>
+          <div id="obsMsg"></div>
+        </div>
+        <div id="sightings"></div>
+        <button class="btn block" id="newSighting">＋ Add observed group by hand</button>
+      </div>
     </div>
     <div class="card">
       <h2>Project tally</h2>
@@ -1513,8 +1806,50 @@ async function renderObservation(id){
   // Basic fields
   const bind = (sel, key, ev="input") => $(sel).addEventListener(ev, e => { o[key] = e.target.value; save(); });
   bind("#oTime","time","change"); bind("#oLoc","location"); $("#oAlt").addEventListener("input", e => { o.alt = e.target.value; o.altSrc = e.target.value ? "Manual" : ""; showAltSrc(); save(); });
-  bind("#oCap","capture","change"); bind("#oLight","light","change"); bind("#oTemp","temp","change"); bind("#oWind","wind","change");
+  bind("#oLight","light","change"); bind("#oTemp","temp","change"); bind("#oWind","wind","change");
   bind("#oMajO","majorOther"); bind("#oMicO","microOther");
+  /* ---- ACO / G Minnow Trap lines ---- */
+  const saveProject = () => DB.put("projects", p);
+  const devHint = () => {
+    const el = $("#devHint"), d = DEVICE[o.capture]; if(!el || !d) return;
+    $$("[data-dev]").forEach(x => x.textContent = d);
+    const line = String(o.line ?? "").trim(), len = lineSize(p, [...otherObs, o], o.capture, line);
+    $("#oLineLen").value = len ?? "";
+    if(!line){ el.textContent = "Enter the line number."; return; }
+    const run = lineRun([...otherObs, o], o), cur = numOrNull(o.device);
+    const lenTxt = !len ? "" : lineFixed(p, o.capture, line) ? `Line ${line} has ${len} ${d}s. ` : `Line ${line}: ${d}s up to ${len} recorded. `;
+    if(!run.length){
+      el.textContent = lenTxt + (cur == null ? `First ${d} on this line today: start at 1 to count up${len ? `, or ${len}` : ", or at the far end"} to count down.`
+        : cur === 1 ? "Counting up from 1." : `Counting down from ${cur}.`);
+    } else {
+      const up = run[0] === 1;
+      el.textContent = lenTxt + `Counting ${up ? "up" : "down"} (started at ${run[0]})` + (cur == null && nextDevice(p, [...otherObs, o], o).end ? ` — end of the line.` : ".");
+    }
+  };
+  const learnLen = () => { const n = numOrNull(o.device), len = numOrNull(lineLen(p, o.capture, o.line)); if(n && n === Math.round(n) && (!len || n > len)){ setLineLen(p, o.capture, o.line, n); saveProject(); } };
+  // "No capture": nothing found at this ACO / GMT / pitfall — the Animals card isn't needed
+  const noCap = () => !!(DEVICE[o.capture] && o.noCapture);
+  const showNoCap = () => { $("#animalsCard").classList.toggle("hidden", noCap()); if(typeof updateFab === "function" && document.getElementById("fabSpeak")) updateFab(); };
+  $("#oNoCap").onchange = e => {
+    if(e.target.checked && (o.animals.length || o.sightings.length)){ e.target.checked = false; toast("Animals are already recorded here — delete them first to mark No capture", 3500); return; }
+    o.noCapture = e.target.checked; save(); showNoCap();
+  };
+  $("#oCap").onchange = e => {
+    o.capture = e.target.value;
+    $("#devWrap").classList.toggle("hidden", !DEVICE[o.capture]);
+    $("#spotWrap").classList.toggle("hidden", !(o.capture === "Spotlighting" && sv));
+    showNoCap();
+    if(DEVICE[o.capture] && (o.devAuto || !String(o.device ?? "").trim())){ o.device = nextDevice(p, [...otherObs, o], o).n; o.devAuto = true; $("#oDev").value = o.device; }
+    devHint(); save();
+  };
+  $("#oLine").oninput = e => {
+    o.line = e.target.value.trim();
+    if(o.devAuto || !String(o.device ?? "").trim()){ o.device = nextDevice(p, [...otherObs, o], o).n; o.devAuto = true; $("#oDev").value = o.device; }
+    devHint(); save();
+  };
+  $("#oDev").oninput = e => { o.device = e.target.value.trim(); o.devAuto = false; learnLen(); devHint(); save(); };
+  $("#oLineLen").onchange = e => { const n = numOrNull(e.target.value); setLineLen(p, o.capture, o.line, n && n > 0 ? Math.round(n) : 0, true); saveProject(); devHint(); };
+  devHint();
   $("#oMaj").onchange = e => { o.major = e.target.value; $("#oMajO").classList.toggle("hidden", o.major!=="Other"); if(o.major==="Other") $("#oMajO").focus(); save(); };
   $("#oMic").onchange = e => { o.micro = e.target.value; $("#oMicO").classList.toggle("hidden", o.micro!=="Other"); if(o.micro==="Other") $("#oMicO").focus(); save(); };
   $("#delObs").onclick = async () => {
@@ -1621,6 +1956,9 @@ async function renderObservation(id){
   const startVoice = (s, btn, idleHTML) => {
     const card = () => $$(".animal")[o.animals.indexOf(s)];
     if(!SpeechRec){ toast("Voice recognition isn't available in this browser — use the keyboard mic in the typing box", 4000); const c = card(); if(c){ c.scrollIntoView({block:"start"}); $('[data-f="voicetext"]', c).focus(); } return; }
+    listen(btn, idleHTML, t => { const c = card(); if(c) $('[data-f="voicetext"]', c).value = t; }, alts => applyVoice(s, alts));
+  };
+  function listen(btn, idleHTML, onText, onFinal){
     if(activeRec){ activeRec.stop(); return; }
     const rec = new SpeechRec(); activeRec = rec;
     rec.lang = "en-NZ"; rec.interimResults = true; rec.maxAlternatives = 5; rec.continuous = false;
@@ -1628,29 +1966,40 @@ async function renderObservation(id){
     setBtn(true);
     rec.onresult = ev => {
       const res = ev.results[ev.results.length-1];
-      const c = card(); if(c) $('[data-f="voicetext"]', c).value = res[0].transcript;
-      if(res.isFinal) applyVoice(s, [...res].map(a => a.transcript));
+      onText(res[0].transcript);
+      if(res.isFinal) onFinal([...res].map(a => a.transcript));
     };
     rec.onerror = ev => { toast(ev.error==="network" ? "Voice needs signal on this phone — use the keyboard mic instead" : ev.error==="not-allowed" ? "Microphone permission was blocked" : "Voice error: "+ev.error, 4000); };
     rec.onend = () => { if(activeRec === rec) activeRec = null; setBtn(false); updateFab(); };
     try{ rec.start(); }catch(err){ activeRec = null; setBtn(false); toast("Couldn't start voice: "+err.message); }
-  };
+  }
   const fab = document.createElement("button");
   fab.id = "fabSpeak"; fab.className = "fab hidden"; fab.type = "button";
   document.body.appendChild(fab); document.body.classList.add("has-fab");
-  const fabTarget = () => {   // the animal card taking up most of the screen
-    const cards = $$(".animal"); if(!cards.length) return null;
-    let best = cards.length-1, bv = 0;
-    cards.forEach((c,i) => { const r = c.getBoundingClientRect(); const v = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0); if(v > bv){ bv = v; best = i; } });
+  const fabTarget = () => {   // whichever animal card (or the Observed section) takes up most of the screen
+    if(noCap()) return null;
+    const els = [...(o.captured ? $$(".animal") : []), ...(o.observed && $("#obsWrap") ? [$("#obsWrap")] : [])];
+    if(!els.length) return null;
+    let best = els[els.length-1], bv = 0;
+    els.forEach(c => { const r = c.getBoundingClientRect(); const v = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0); if(v > bv){ bv = v; best = c; } });
     return best;
   };
-  const fabHTML = () => { const i = fabTarget(); if(i == null) return ""; const num = projectTally([...otherObs, o]).numbers.get(o.animals[i].id);
-    return `<span class="mic">🎤</span><span>Speak<small>Animal ${num ? num.n : i+1}</small></span>`; };
+  const fabHTML = () => {
+    const el = fabTarget(); if(!el) return "";
+    if(el.id === "obsWrap") return `<span class="mic">🎤</span><span>Speak<small>Observed</small></span>`;
+    const i = $$(".animal").indexOf(el), num = projectTally([...otherObs, o]).numbers.get(o.animals[i].id);
+    return `<span class="mic">🎤</span><span>Speak<small>Animal ${num ? num.n : i+1}</small></span>`;
+  };
   function updateFab(){
     if(!document.body.contains(fab) || fab.classList.contains("listening")) return;
-    const i = fabTarget(); fab.classList.toggle("hidden", i == null); if(i != null) fab.innerHTML = fabHTML();
+    const el = fabTarget(); fab.classList.toggle("hidden", !el); if(el) fab.innerHTML = fabHTML();
   }
-  fab.onclick = () => { if(activeRec){ activeRec.stop(); return; } const i = fabTarget(); if(i != null) startVoice(o.animals[i], fab, fabHTML); };
+  fab.onclick = () => {
+    if(activeRec){ activeRec.stop(); return; }
+    const el = fabTarget(); if(!el) return;
+    if(el.id === "obsWrap") startObsVoice(fab, fabHTML);
+    else startVoice(o.animals[$$(".animal").indexOf(el)], fab, fabHTML);
+  };
   let fabRaf = 0;
   const onScroll = () => { cancelAnimationFrame(fabRaf); fabRaf = requestAnimationFrame(updateFab); };
   window.addEventListener("scroll", onScroll, {passive:true});
@@ -1670,7 +2019,7 @@ async function renderObservation(id){
       return `<div class="animal" data-i="${i}">
         <div class="head"><span class="grow">Animal ${num.n} · ID <span class="id">${s.id}</span></span>
           <button class="btn danger small" data-act="del">Delete</button></div>
-        <div class="nums"><span class="pill">No. ${num.n} for this project</span><span class="pill">${esc(speciesLabel(s.species))} no. ${num.sp}</span>${s.genetic ? `<span class="pill">Genetic sample</span>` : ""}${s.deceased ? `<span class="pill dead">Deceased</span>` : ""}</div>
+        <div class="nums"><span class="pill">No. ${num.n} for this project</span><span class="pill">${esc(speciesLabel(s.species))} no. ${num.sp}</span>${s.recapture ? `<span class="pill">Recapture</span>` : ""}${s.genetic ? `<span class="pill">Genetic sample</span>` : ""}${s.deceased ? `<span class="pill dead">Deceased</span>` : ""}</div>
         <div class="voice">
           <div class="btns" style="margin-top:6px">
             <button class="btn primary speak" data-act="voice">🎤 Speak</button>
@@ -1698,6 +2047,7 @@ async function renderObservation(id){
         <label>Sex</label>${seg("sex", SEX, s.sex)}
         <div data-gravid class="${s.sex==="Female"?"":"hidden"}"><label>Gravid</label>${seg("gravid", GRAVID, s.gravid)}</div>
         <div class="checks" style="margin-top:12px">
+          <label class="chk"><input type="checkbox" data-f="recapture" ${s.recapture?"checked":""}> Recapture</label>
           <label class="chk"><input type="checkbox" data-f="genetic" ${s.genetic?"checked":""}> Genetic sample</label>
           <label class="chk"><input type="checkbox" data-f="deceased" ${s.deceased?"checked":""}> Deceased</label>
         </div>
@@ -1727,6 +2077,7 @@ async function renderObservation(id){
       $('[data-f="voicetext"]', el).onkeydown = e => { if(e.key==="Enter"){ e.preventDefault(); const v = e.target.value.trim(); if(v) applyVoice(s, [v]); } };
       $('[data-f="deceased"]', el).onchange = e => { s.deceased = e.target.checked; save(); renderAnimals(); };
       $('[data-f="genetic"]', el).onchange = e => { s.genetic = e.target.checked; save(); renderAnimals(); };
+      $('[data-f="recapture"]', el).onchange = e => { s.recapture = e.target.checked; save(); renderAnimals(); };
       $('[data-f="notes"]', el).oninput = e => { s.notes = e.target.value; save(); };
       const regenBox = $('[data-f="regen"]', el);
       regenBox.oninput = e => { s.regen = e.target.value; save(); };
@@ -1785,12 +2136,111 @@ async function renderObservation(id){
     input.click();
   };
   $("#newAnimal").onclick = async () => {
-    const s = { id: await newAnimalId(), createdAt: Date.now(), species: UNKNOWN, total:"", svl:"", vtl:"", vtlSrc:"", tailState:"", regen:"", age:"", sex:"", gravid:"", deceased:false, genetic:false, notes:"" };
+    const s = { id: await newAnimalId(), createdAt: Date.now(), species: UNKNOWN, total:"", svl:"", vtl:"", vtlSrc:"", tailState:"", regen:"", age:"", sex:"", gravid:"", deceased:false, genetic:false, recapture:false, notes:"" };
     o.animals.push(s); await save(); renderAnimals();
     const last = $$(".animal").pop(); if(last) last.scrollIntoView({behavior:"smooth", block:"start"});
     toast(`Animal no. ${projectTally([...otherObs, o]).numbers.get(s.id).n} for this project`);
   };
   renderAnimals();
+  /* ---- Observed (not captured): groups of animals seen, entered as a sentence or by hand ---- */
+  const obsMsg = {};
+  const ageText = g => [g.adult && `${g.adult} adult${g.adult>1?"s":""}`, g.subadult && `${g.subadult} sub-adult${g.subadult>1?"s":""}`, g.neonate && `${g.neonate} neonate${g.neonate>1?"s":""}`, g.gravid && `${g.gravid} gravid`].filter(Boolean).join(", ");
+  const describeGroup = g => `${g.count} × ${sightingLabel(g)}${ageText(g) ? ` (${ageText(g)})` : ""}`;
+  const showObsMsg = () => {
+    const el = $("#obsMsg"); if(!el) return;
+    el.innerHTML = obsMsg.text ? `<div class="vres ${obsMsg.ok?"":"warn"}">${esc(obsMsg.text)} ${obsMsg.undo?`<button class="btn small" id="obsUndo">Undo</button>`:""}</div>` : "";
+    const u = $("#obsUndo"); if(u) u.onclick = () => { o.sightings = o.sightings.filter(g => !obsMsg.undo.includes(g.id)); obsMsg.text = ""; save(); renderSightings(); toast("Removed what was just added"); };
+  };
+  const applyObserved = alternatives => {
+    let best = null, bestText = "", bestScore = -1;
+    for(const a of alternatives){ const r = parseObserved(a); const sc = r.length*100 + r.reduce((n,g)=>n+g.adult+g.subadult+g.neonate+g.gravid,0); if(sc > bestScore){ best = r; bestText = a; bestScore = sc; } }
+    if(!best || !best.length){ Object.assign(obsMsg, {ok:false, text:`Heard “${alternatives[0]||""}” — nothing recognised. Start each group with a number, e.g. “2 skinks 1 adult 1 neonate, 3 mice”.`, undo:null}); showObsMsg(); toast(obsMsg.text, 4500); return; }
+    const added = best.map(g => ({ id:uid(), createdAt:Date.now(), ...g }));
+    o.sightings.push(...added);
+    Object.assign(obsMsg, {ok:true, text:`Heard “${bestText}” → ${added.map(describeGroup).join("; ")}`, undo: added.map(g => g.id)});
+    const box = $("#obsText"); if(box) box.value = "";
+    save(); renderSightings(); toast("Added: " + added.map(describeGroup).join("; "), 4000);
+  };
+  const startObsVoice = (btn, idleHTML) => {
+    if(!SpeechRec){ toast("Voice recognition isn't available in this browser — use the keyboard mic in the typing box", 4000); const b = $("#obsText"); if(b){ b.scrollIntoView({block:"center"}); b.focus(); } return; }
+    listen(btn, idleHTML, t => { const b = $("#obsText"); if(b) b.value = t; }, applyObserved);
+  };
+  const renderSightings = () => {
+    renderTally();
+    const box = $("#sightings"); if(!box) return;
+    showObsMsg();
+    if(!o.sightings.length){ box.innerHTML = `<p class="muted">Nothing observed yet. Say or type what you saw above, or add a group by hand.</p>`; updateFab(); return; }
+    box.innerHTML = o.sightings.map((g,i) => {
+      const lizard = g.group !== "Other";
+      const unknownAge = Math.max(0, (+g.count||0) - (+g.adult||0) - (+g.subadult||0) - (+g.neonate||0));
+      const num = (k, label) => `<div><label>${label}</label><input data-sn="${k}" type="number" min="0" inputmode="numeric" value="${+g[k]||0}"></div>`;
+      return `<div class="sighting" data-i="${i}">
+        <div class="head"><span class="grow" data-sh-title><b>${esc(describeGroup(g))}</b></span><button class="btn danger small" data-sa="del">Delete</button></div>
+        <div class="seg" style="margin-top:8px">${OBS_GROUPS.map(x => `<button type="button" data-sg="${x}" class="${x===g.group?"on":""}">${x}</button>`).join("")}</div>
+        ${lizard ? `<label>Species</label><select data-sf="species">${groupSpeciesOptions(g.group, g.species)}</select>`
+                 : `<label>What was it?</label><input data-sf="name" value="${esc(g.name)}" placeholder="e.g. mouse, rat, frog, hedgehog">`}
+        <div class="cnts">${num("count","Seen")}${num("adult","Adult")}${num("subadult","Sub-adult")}${num("neonate","Neonate")}${lizard ? num("gravid","Gravid") : ""}</div>
+        <div class="calc" data-sc>${unknownAge ? `Age not recorded for ${unknownAge}.` : ""}</div>
+        <label>Notes</label><input data-sf="notes" value="${esc(g.notes)}" placeholder="Optional">
+      </div>`;
+    }).join("");
+    $$(".sighting", box).forEach(el => {
+      const g = o.sightings[+el.dataset.i];
+      const refresh = () => {
+        $("[data-sh-title]", el).innerHTML = `<b>${esc(describeGroup(g))}</b>`;
+        const u = Math.max(0, g.count - g.adult - g.subadult - g.neonate);
+        $("[data-sc]", el).textContent = u ? `Age not recorded for ${u}.` : "";
+        renderTally();
+      };
+      $$("[data-sg]", el).forEach(b => b.onclick = () => {
+        if(g.group === b.dataset.sg) return;
+        g.group = b.dataset.sg;
+        if(g.group === "Other"){ if(!g.name && g.species && g.species !== UNKNOWN) g.name = speciesLabel(g.species); g.species = ""; g.gravid = 0; }
+        else { const fam = (SPECIES.find(x => x[0] === g.species)||[])[2]; if(!g.species || fam !== GROUP_FAMILY[g.group]) g.species = UNKNOWN; }
+        save(); renderSightings();
+      });
+      const sp = $('[data-sf="species"]', el); if(sp) sp.onchange = e => { g.species = e.target.value; save(); refresh(); };
+      const nm = $('[data-sf="name"]', el); if(nm) nm.oninput = e => { g.name = e.target.value; save(); refresh(); };
+      $('[data-sf="notes"]', el).oninput = e => { g.notes = e.target.value; save(); };
+      $$("[data-sn]", el).forEach(inp => inp.oninput = () => {
+        const k = inp.dataset.sn; g[k] = Math.max(0, parseInt(inp.value, 10) || 0);
+        const aged = g.adult + g.subadult + g.neonate;
+        if(k !== "count" && k !== "gravid" && aged > g.count){ g.count = aged; $('[data-sn="count"]', el).value = g.count; }
+        save(); refresh();
+      });
+      $('[data-sa="del"]', el).onclick = () => { if(!confirm(`Delete “${describeGroup(g)}”?`)) return; o.sightings.splice(+el.dataset.i, 1); save(); renderSightings(); };
+    });
+    updateFab();
+  };
+  $("#obsApply").onclick = () => { const v = $("#obsText").value.trim(); if(v) applyObserved([v]); };
+  $("#obsText").onkeydown = e => { if(e.key === "Enter"){ e.preventDefault(); const v = e.target.value.trim(); if(v) applyObserved([v]); } };
+  $("#obsSpeak").onclick = () => startObsVoice($("#obsSpeak"), () => "🎤 Speak");
+  $("#newSighting").onclick = () => {
+    o.sightings.push({ id:uid(), createdAt:Date.now(), group:"Skink", species:UNKNOWN, name:"", count:1, adult:0, subadult:0, neonate:0, gravid:0, notes:"" });
+    save(); renderSightings();
+    const last = $$(".sighting").pop(); if(last) last.scrollIntoView({behavior:"smooth", block:"center"});
+  };
+
+  /* ---- Captured / Observed tick boxes ---- */
+  const showMode = () => {
+    $("#capWrap").classList.toggle("hidden", !o.captured);
+    $("#obsWrap").classList.toggle("hidden", !o.observed);
+    $("#modeHint").classList.toggle("hidden", o.captured || o.observed);
+    updateFab();
+  };
+  $("#mCap").onchange = e => {
+    if(!e.target.checked && o.animals.length){ e.target.checked = true; toast("Delete the captured animals first to untick Captured", 3500); return; }
+    o.captured = e.target.checked; save(); showMode();
+  };
+  $("#mObs").onchange = e => {
+    if(!e.target.checked && o.sightings.length){ e.target.checked = true; toast("Delete the observed groups first to untick Observed", 3500); return; }
+    o.observed = e.target.checked; save(); showMode();
+    if(o.observed) $("#obsWrap").scrollIntoView({behavior:"smooth", block:"start"});
+  };
+  renderSightings();
+  showMode();
+  showNoCap();
+  if(sv) mountTrackBox(p, sv);
 }
 
 /* ===================== Export: Excel — two files, "ARDS records" and "Project data" ===================== */
@@ -1825,7 +2275,7 @@ async function buildWorkbook(projectId, kind){
   const habCode = o => [o.major==="Other" ? (o.majorOther||"Other") : o.major, o.micro==="Other" ? (o.microOther||"Other") : o.micro].filter(Boolean).join(", ");
   const wxCode = o => [o.light,o.temp,o.wind].filter(Boolean).join(",");
   const lat = o => o.lat!=null ? +o.lat.toFixed(6) : "", lon = o => o.lon!=null ? +o.lon.toFixed(6) : "";
-  let header, rows, sheet, name;
+  let header, rows, sheet, name; const extra = [];
 
   if(kind === "ards"){
     // One row per captured animal, laid out like the ARDS card
@@ -1846,26 +2296,41 @@ async function buildWorkbook(projectId, kind){
   } else {
     // Full survey data, one row per animal (observations with no animals get one row)
     header = ["Locality name","Start date","Survey no.","Survey date","Observers","Obs no.","Obs time","Location","Latitude (WGS84)","Longitude (WGS84)",
-      "Capture type","Habitat (ARDS code)","Weather (ARDS code)","Animal no. (project)","Animal ID","Species","Common name","Species no. (project)",
-      "Total length (mm)","SVL (mm)","VTL (mm)","Tail","Regen (mm)","Age class","Sex","Gravid","Photo files","Deceased","Genetic sample"];
+      "Capture type","Line","ACO / GMT / Pitfall no.","No capture","Habitat (ARDS code)","Weather (ARDS code)","Animal no. (project)","Animal ID","Species","Common name","Species no. (project)",
+      "Total length (mm)","SVL (mm)","VTL (mm)","Tail","Regen (mm)","Age class","Sex","Gravid","Photo files","Deceased","Genetic sample","Recapture"];
     rows = [header];
     for(const o of obs){
       const sv = surveyOf(p, o);
       const base = [p.locality||"", p.date||"", sv ? sv.no : "", sv ? sv.date : (o.date||""), who(sv)[0], o.no, o.time||"", o.location||"", lat(o), lon(o),
-        o.capture||"", habCode(o), wxCode(o)];
-      if(!(o.animals||[]).length) rows.push([...base, ...Array(header.length - base.length).fill("")]);
+        o.capture||"", DEVICE[o.capture] ? (o.line||"") : "", DEVICE[o.capture] ? (o.device||"") : "", DEVICE[o.capture] && o.noCapture ? "Yes" : "", habCode(o), wxCode(o)];
+      if(!(o.animals||[]).length && !(o.sightings||[]).length) rows.push([...base, ...Array(header.length - base.length).fill("")]);
       for(const s of o.animals||[]){
         const num = tally.numbers.get(s.id) || {n:"", sp:""};
         rows.push([...base, num.n, s.id, s.species||"", commonName(s.species), num.sp, s.total||"", s.svl||"", s.vtl||s.tail||"",
           s.tailState||"", s.tailState==="Regen"?(s.regen||""):"", s.age||"", s.sex||"", s.gravid||"",
-          photosOf(s).map(x => photoName(x, s)).join("; "), s.deceased?"Yes":"", s.genetic?"Yes":""]);
+          photosOf(s).map(x => photoName(x, s)).join("; "), s.deceased?"Yes":"", s.genetic?"Yes":"", s.recapture?"Yes":""]);
       }
     }
     sheet = "Project data"; name = `Project_data_${projectFolder(p)}.xlsx`;
+    // Observed (not captured): one row per group
+    const oh = ["Locality name","Start date","Survey no.","Survey date","Observers","Obs no.","Obs time","Location","Latitude (WGS84)","Longitude (WGS84)",
+      "Capture type","Line","ACO / GMT / Pitfall no.","Habitat (ARDS code)","Weather (ARDS code)","Group","Species / animal","Common name","Number observed","Adults","Sub-adults","Neonates","Age not recorded","Gravid","Notes"];
+    const orows = [oh];
+    for(const o of obs){
+      const sv = surveyOf(p, o);
+      for(const g of o.sightings||[]){
+        const lizard = g.group !== "Other", n = +g.count||0;
+        orows.push([p.locality||"", p.date||"", sv ? sv.no : "", sv ? sv.date : (o.date||""), who(sv)[0], o.no, o.time||"", o.location||"", lat(o), lon(o),
+          o.capture||"", DEVICE[o.capture] ? (o.line||"") : "", DEVICE[o.capture] ? (o.device||"") : "", habCode(o), wxCode(o), g.group, lizard ? (g.species||UNKNOWN) : (g.name||""), lizard ? commonName(g.species) : "",
+          n, +g.adult||0, +g.subadult||0, +g.neonate||0, Math.max(0, n-(+g.adult||0)-(+g.subadult||0)-(+g.neonate||0)), lizard ? (+g.gravid||0) : "", g.notes||""]);
+      }
+    }
+    extra.push(["Observed", oh, orows]);
   }
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws["!cols"] = header.map(h => ({wch: Math.max(10, Math.min(40, h.length+4))}));
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, sheet);
+  for(const [nm, h, r] of extra){ const x = XLSX.utils.aoa_to_sheet(r); x["!cols"] = h.map(c => ({wch: Math.max(10, Math.min(40, c.length+4))})); XLSX.utils.book_append_sheet(wb, x, nm); }
   XLSX.utils.book_append_sheet(wb, codesSheet(), "Codes");
   return {wb, name};
 }
@@ -1897,7 +2362,7 @@ async function exportZip(projectId){
   const p = await DB.get("projects", projectId);
   const obs = await DB.by("observations","projectId",projectId);
   const photos = await DB.by("photos","projectId",projectId);
-  if(!photos.length){ toast("No photos in this project"); return; }
+  if(!photos.length && !(await allTracks()).some(t => t.projectId === projectId && t.endedAt)){ toast("No photos or tracks in this project"); return; }
   toast("Building ZIP…");
   const files = [];
   for(const ph of photos){
@@ -1905,18 +2370,22 @@ async function exportZip(projectId){
     const o = obs.find(x=>x.id===ph.obsId); const s = o && (o.animals||[]).find(x=>x.id===ph.animalId); if(!o||!s) continue;
     files.push({ name: `${projectFolder(p)}/${obsFolder(o)}/${photoName(ph,s)}`, blob: ph.blob });
   }
+  for(const t of (await allTracks()).filter(t => t.projectId === projectId && t.endedAt)){
+    const n = (await surveyTracks(t.surveyId)).findIndex(x => x.id === t.id) + 1;
+    files.push({ name: `${projectFolder(p)}/${trackFileName(p, t, n)}`, blob: await trackGeoJSON(p, t) });
+  }
   downloadBlob(await makeZip(files), `Photos_${projectFolder(p)}.zip`);
 }
 
 /* ===================== Backup ===================== */
 async function backupBlob(){
   const data = { app:"lizard-ards", version:2, exported:new Date().toISOString(),
-    projects: await DB.all("projects"), observations: await DB.all("observations"), observers: await DB.all("observers") };
+    projects: await DB.all("projects"), observations: await DB.all("observations"), observers: await DB.all("observers"), tracks: await allTracks() };
   return new Blob([JSON.stringify(data,null,1)], {type:"application/json"});
 }
 async function backup(){
   const data = { app:"lizard-ards", version:2, exported:new Date().toISOString(),
-    projects: await DB.all("projects"), observations: await DB.all("observations"), observers: await DB.all("observers") };
+    projects: await DB.all("projects"), observations: await DB.all("observations"), observers: await DB.all("observers"), tracks: await allTracks() };
   downloadBlob(new Blob([JSON.stringify(data,null,1)], {type:"application/json"}), `lizard-ards-backup_${todayISO()}.json`);
 }
 $("#importInput").onchange = async e => {
@@ -1924,6 +2393,7 @@ $("#importInput").onchange = async e => {
   try{
     const d = JSON.parse(await f.text()); if(d.app!=="lizard-ards") throw new Error("Not a Lizard Field Recorder backup");
     for(const k of ["projects","observations","observers"]) for(const x of d[k]||[]) await DB.put(k, k==="observations" ? fixObs(x) : x);
+    for(const t of d.tracks||[]) if(t && t.type === "track" && t.id) await DB.put("kv", t.endedAt ? t : {...t, endedAt: t.points && t.points.length ? t.points[t.points.length-1][3] : t.startedAt}, "track:" + t.id);
     await migrate();
     toast("Backup restored"); route();
   }catch(err){ toast("Restore failed: " + err.message); }
@@ -1934,6 +2404,8 @@ $("#importInput").onchange = async e => {
 (async () => {
   await DB.open(); await loadSettings(); await FS.load();
   try{ await migrate(); }catch(e){ console.error("migrate", e); }
+  $("#trackEnd").onclick = async () => { if(!confirm("End the spotlight track?")) return; await Track.end(); if(window.redrawTrackBox) window.redrawTrackBox(); };
+  try{ await Track.load(); }catch(e){ console.error("track", e); }
   if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
   if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
   route();
